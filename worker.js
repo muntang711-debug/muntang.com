@@ -92,7 +92,7 @@ async function fetchChannelFeed() {
         url: "https://www.youtube.com/watch?v=" + encodeURIComponent(id)
       };
     }).filter(Boolean).slice(0, 12);
-    const feedAuthor = xml.match(/<author>\\s*<name>([\\s\\S]*?)<\\/name>/);
+    const feedAuthor = xml.match(/<author>\s*<name>([\s\S]*?)<\/name>/);
     if (feedAuthor && feedAuthor[1]) channelTitle = decodeXml(feedAuthor[1]);
     return { channelTitle: channelTitle, channelId: channelId, recent: recent };
   } catch (_) {
