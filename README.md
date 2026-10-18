@@ -13,7 +13,15 @@
 - 추천 영상 01: https://youtu.be/5D9M7hhDNlY
 - 추천 영상 02: https://www.youtube.com/watch?v=JupaczQCTFk&t=1s
 
-## 개발 및 배포
+## 자동 배포
+
+이 저장소의 `main` 브랜치는 Cloudflare Workers Builds에 연결되어 있습니다. `main`에 커밋을 푸시하면 Cloudflare가 저장소 루트의 `wrangler.jsonc` 설정을 사용해 자동으로 빌드하고 배포합니다.
+
+- Worker 이름: `muntang-com`
+- 배포 명령: `npx wrangler deploy`
+- 미리보기 주소: https://muntang-com.muntang711.workers.dev
+
+## 로컬 개발 및 수동 배포
 
 Node.js가 설치된 환경에서 아래 명령어를 실행합니다.
 
@@ -21,8 +29,6 @@ Node.js가 설치된 환경에서 아래 명령어를 실행합니다.
 npm install --save-dev wrangler
 npx wrangler deploy
 ```
-
-Cloudflare Workers Builds를 사용하는 경우 저장소의 `main` 브랜치를 연결하고 배포 명령을 `npx wrangler deploy`로 설정합니다. `wrangler.jsonc`의 Worker 이름은 Cloudflare Worker 이름인 `muntang-com`과 일치해야 합니다.
 
 ## 프로젝트 구조
 
