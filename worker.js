@@ -13,9 +13,9 @@ function decodeXml(value) {
 }
 
 function readTag(text, tag) {
-  const expression = new RegExp("<" + tag + "(?:\\\\s[^>]*)?>([\\\\s\\\\S]*?)</" + tag + ">");
+  const expression = new RegExp("<" + tag + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + tag + ">");
   const match = String(text || "").match(expression);
-  return match ? decodeXml(match[1].replace(/<!\\[CDATA\\[|\\]\\]>/g, "").trim()) : "";
+  return match ? decodeXml(match[1].replace(/<!\[CDATA\[|\]\]>/g, "").trim()) : "";
 }
 
 function jsonResponse(value, status, extraHeaders) {
@@ -61,13 +61,13 @@ async function fetchChannelFeed() {
     });
     if (channelResponse.ok) {
       channelHtml = await channelResponse.text();
-      const idMatch = channelHtml.match(/"externalId"\\s*:\\s*"(UC[^"]+)"/) ||
-        channelHtml.match(/"channelId"\\s*:\\s*"(UC[^"]+)"/) ||
-        channelHtml.match(/youtube\\.com\\/channel\\/(UC[A-Za-z0-9_-]+)/);
+      const idMatch = channelHtml.match(/"externalId"\s*:\s*"(UC[^"]+)"/) ||
+        channelHtml.match(/"channelId"\s*:\s*"(UC[^"]+)"/) ||
+        channelHtml.match(/youtube\.com\/channel\/(UC[A-Za-z0-9_-]+)/);
       if (idMatch) channelId = idMatch[1];
       const titleMatch = channelHtml.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i) ||
         channelHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
-      if (titleMatch && titleMatch[1]) channelTitle = decodeXml(titleMatch[1]).replace(/\\s*-\\s*YouTube\\s*$/i, "");
+      if (titleMatch && titleMatch[1]) channelTitle = decodeXml(titleMatch[1]).replace(/\s*-\s*YouTube\s*$/i, "");
     }
   } catch (_) {}
 
@@ -78,7 +78,7 @@ async function fetchChannelFeed() {
     });
     if (!feedResponse.ok) return { channelTitle: channelTitle, channelId: channelId, recent: [] };
     const xml = await feedResponse.text();
-    const recent = Array.from(xml.matchAll(/<entry>([\\s\\S]*?)<\\/entry>/g)).map(function(match) {
+    const recent = Array.from(xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)).map(function(match) {
       const entry = match[1];
       const id = readTag(entry, "yt:videoId");
       if (!id) return null;
