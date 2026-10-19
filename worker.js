@@ -203,30 +203,66 @@ function collectYouTubeVideos(data) {
 }
 
 function findYouTubeContinuation(data) {
-  const stack = [data];
+  const scan = [data];
   const seen = new Set();
-  let token = "";
-  while (stack.length) {
-    const current = stack.pop();
+  const roots = [];
+  while (scan.length) {
+    const current = scan.pop();
     if (!current || typeof current !== "object" || seen.has(current)) continue;
     seen.add(current);
     if (Array.isArray(current)) {
-      for (let i = current.length - 1; i >= 0; i--) stack.push(current[i]);
+      for (let i = current.length - 1; i >= 0; i--) scan.push(current[i]);
       continue;
     }
-    if (current.continuationItemRenderer &&
-        current.continuationItemRenderer.continuationEndpoint &&
-        current.continuationItemRenderer.continuationEndpoint.continuationCommand &&
-        current.continuationItemRenderer.continuationEndpoint.continuationCommand.token) {
-      token = current.continuationItemRenderer.continuationEndpoint.continuationCommand.token;
+    if (current.richGridRenderer) roots.push(current.richGridRenderer);
+    if (current.richGridContinuation) roots.push(current.richGridContinuation);
+    if (current.appendContinuationItemsAction &&
+        Array.isArray(current.appendContinuationItemsAction.continuationItems)) {
+      roots.push(current.appendContinuationItemsAction.continuationItems);
     }
     const keys = Object.keys(current);
     for (let i = keys.length - 1; i >= 0; i--) {
       const value = current[keys[i]];
-      if (value && typeof value === "object") stack.push(value);
+      if (value && typeof value === "object") scan.push(value);
     }
   }
-  return token;
+
+  for (const root of roots) {
+    const pending = [root];
+    const visited = new Set();
+    let token = "";
+    while (pending.length) {
+      const current = pending.pop();
+      if (!current || typeof current !== "object" || visited.has(current)) continue;
+      visited.add(current);
+      if (Array.isArray(current)) {
+        for (let i = current.length - 1; i >= 0; i--) pending.push(current[i]);
+        continue;
+      }
+      const item = current.continuationItemRenderer;
+      if (item && item.continuationEndpoint && item.continuationEndpoint.continuationCommand &&
+          item.continuationEndpoint.continuationCommand.token) {
+        token = item.continuationEndpoint.continuationCommand.token;
+      }
+      if (current.nextContinuationData && current.nextContinuationData.continuation) {
+        token = current.nextContinuationData.continuation;
+      }
+      if (Array.isArray(current.continuations)) {
+        current.continuations.forEach(function(entry) {
+          if (entry && entry.nextContinuationData && entry.nextContinuationData.continuation) {
+            token = entry.nextContinuationData.continuation;
+          }
+        });
+      }
+      const keys = Object.keys(current);
+      for (let i = keys.length - 1; i >= 0; i--) {
+        const value = current[keys[i]];
+        if (value && typeof value === "object") pending.push(value);
+      }
+    }
+    if (token) return token;
+  }
+  return "";
 }
 
 async function fetchChannelVideoPage(continuation) {
