@@ -393,7 +393,7 @@ export default {
         "X-Content-Type-Options": "nosniff",
         "Referrer-Policy": "strict-origin-when-cross-origin",
         "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-        "Content-Security-Policy": "default-src 'self'; img-src 'self' https://i.ytimg.com data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'"
+        "Content-Security-Policy": "default-src 'self'; img-src 'self' https://i.ytimg.com data:; font-src 'self' https://cdn.jsdelivr.net data:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'"
       }
     });
   }
