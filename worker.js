@@ -146,6 +146,34 @@ function collectYouTubeVideos(data) {
       for (let i = current.length - 1; i >= 0; i--) stack.push(current[i]);
       continue;
     }
+    const lockup = current.lockupViewModel || (current.contentType === "LOCKUP_CONTENT_TYPE_VIDEO" ? current : null);
+    if (lockup && typeof lockup.contentId === "string" &&
+        /^[A-Za-z0-9_-]{11}$/.test(lockup.contentId) && !seen.has(lockup.contentId)) {
+      const lockTitle = lockup.metadata && lockup.metadata.lockupMetadataViewModel &&
+        lockup.metadata.lockupMetadataViewModel.title && lockup.metadata.lockupMetadataViewModel.title.content || "";
+      const sources = lockup.contentImage && lockup.contentImage.thumbnailViewModel &&
+        lockup.contentImage.thumbnailViewModel.image && lockup.contentImage.thumbnailViewModel.image.sources || [];
+      const lockMeta = lockup.metadata && lockup.metadata.lockupMetadataViewModel &&
+        lockup.metadata.lockupMetadataViewModel.metadata && lockup.metadata.lockupMetadataViewModel.metadata.contentMetadataViewModel &&
+        lockup.metadata.lockupMetadataViewModel.metadata.contentMetadataViewModel.metadataRows || [];
+      const metaParts = lockMeta.reduce(function(all, row) {
+        return all.concat((row.metadataParts || []).map(function(part) {
+          return part && part.text && part.text.content || "";
+        }).filter(Boolean));
+      }, []);
+      const lockThumbnail = sources.length && sources[sources.length - 1].url ||
+        ("https://i.ytimg.com/vi/" + lockup.contentId + "/hqdefault.jpg");
+      if (lockTitle) {
+        seen.add(lockup.contentId);
+        videos.push({
+          id: lockup.contentId,
+          title: lockTitle,
+          thumbnail_url: lockThumbnail,
+          publishedText: metaParts.length ? metaParts[metaParts.length - 1] : "",
+          url: "https://www.youtube.com/watch?v=" + encodeURIComponent(lockup.contentId)
+        });
+      }
+    }
     const id = current.videoId;
     if (typeof id === "string" && /^[A-Za-z0-9_-]{11}$/.test(id) && current.title && current.thumbnail && !seen.has(id)) {
       const title = textFromYouTubeRuns(current.title);
