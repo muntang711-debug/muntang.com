@@ -4,8 +4,9 @@
 
 - 채널 색상: `#FF7700`
 - 런타임: Cloudflare Workers
-- 메인 페이지 및 메타데이터 API: `worker.js`
-- 배포 설정: `wrangler.jsonc`
+- 프론트엔드: `public/index.html`, `public/styles.css`, `public/script.js`
+- 백엔드 API: `worker.js`
+- 정적 자산·배포 설정: `wrangler.jsonc`
 
 ## 링크
 
@@ -41,8 +42,13 @@ npx wrangler deploy
 
 ```
 .
-├── worker.js
-├── wrangler.jsonc
+├── worker.js              # YouTube API 및 백엔드 라우팅
+├── wrangler.jsonc         # Cloudflare Workers 설정
+├── public/
+│   ├── index.html         # 페이지 구조
+│   ├── styles.css         # 디자인·반응형·애니메이션
+│   ├── script.js          # 상호작용·영상·LDM 로직
+│   └── _headers           # 정적 자산 보안·캐시 헤더
 ├── README.md
 └── .gitignore
 ```
