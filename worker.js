@@ -174,6 +174,15 @@ function collectYouTubeVideos(data) {
         });
       }
     }
+    const reel = current.reelItemRenderer;
+    if (reel && typeof reel.videoId === "string" && /^[A-Za-z0-9_-]{11}$/.test(reel.videoId) && !seen.has(reel.videoId)) {
+      const reelId = reel.videoId;
+      const reelTitle = textFromYouTubeRuns(reel.headline) || textFromYouTubeRuns(reel.accessibility && reel.accessibility.accessibilityData && reel.accessibility.accessibilityData.label);
+      if (reelTitle) {
+        seen.add(reelId);
+        videos.push({ id: reelId, title: reelTitle, thumbnail_url: "https://i.ytimg.com/vi/" + reelId + "/hqdefault.jpg", publishedText: "", url: "https://www.youtube.com/shorts/" + encodeURIComponent(reelId), type: "short" });
+      }
+    }
     const id = current.videoId;
     if (typeof id === "string" && /^[A-Za-z0-9_-]{11}$/.test(id) && current.title && current.thumbnail && !seen.has(id)) {
       const title = textFromYouTubeRuns(current.title);
