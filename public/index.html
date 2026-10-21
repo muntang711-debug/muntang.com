@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="문탕이의 영상 아카이브.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="문탕닷컴 — 문탕이">
+  <meta property="og:description" content="문탕이의 영상 아카이브.">
+  <title>문탕닷컴 — 문탕이</title>
+  <link rel="stylesheet" href="/styles.css">
+  
+</head>
+<body>
+  <div class="top-progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <header class="header">
+    <nav class="nav wrap" aria-label="주요 메뉴">
+      <a href="#top" class="brand" aria-label="문탕닷컴 홈">문탕닷컴<span class="brand-dot">.</span></a>
+      <div class="nav-right">
+        <a class="nav-channel" href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" target="_blank" rel="noopener noreferrer" aria-label="유튜브 채널 열기"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12s0 3.6.5 5.8a3 3 0 0 0 2.1 2.1c1.8.5 9.4.5 9.4.5s7.6 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12s0-3.6-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z"/></svg></a>
+        <button class="menu-trigger" id="menuTrigger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="siteDrawer"><span class="hamburger" aria-hidden="true"><i></i><i></i><i></i></span></button>
+      </div>
+    </nav>
+  </header>
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="siteDrawer" aria-hidden="true" aria-label="사이트 메뉴">
+    <div class="drawer-head"><div class="drawer-menu-title">메뉴<span class="brand-dot">.</span></div></div>
+    <div class="drawer-body">
+      <div class="drawer-overline drawer-stagger">바로 이동</div>
+      <nav class="drawer-links" aria-label="사이트 메뉴">
+        <a class="drawer-link drawer-stagger" href="#top"><span>홈</span><small>01</small><em>↗</em></a>
+        <a class="drawer-link drawer-stagger" href="#showreel"><span>영상 쇼릴</span><small>02</small><em>↗</em></a>
+        <a class="drawer-link drawer-stagger" href="#showreel"><span>제작 과정</span><small>03</small><em>↗</em></a>
+        <a class="drawer-link drawer-stagger" href="#global"><span>영어 자막</span><small>04</small><em>↗</em></a>
+        <a class="drawer-link drawer-stagger" href="#videos"><span>전체 영상</span><small>05</small><em>↗</em></a>
+      </nav>
+      <div class="drawer-ldm-wrap drawer-stagger">
+        <button class="drawer-ldm-toggle" id="ldmToggle" type="button" aria-pressed="false" aria-label="LDM 저사양 모드 켜기">
+          <span class="ldm-copy"><b>LDM</b><small>Low Detail Mod</small></span>
+          <span class="ldm-state" id="ldmStatus">끔</span>
+          <span class="ldm-switch" aria-hidden="true"><i></i></span>
+        </button>
+      </div>
+      <div class="drawer-foot drawer-stagger"><a class="drawer-channel" href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" target="_blank" rel="noopener noreferrer">채널 바로가기 <span>↗</span></a><span class="drawer-social">@문탕이</span></div>
+    </div>
+  </aside>
+  <main id="top">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          
+          <h1 class="hero-title"><span class="line">문탕이의</span><span class="line accent">영상 세계<span class="brand-dot">.</span></span></h1>
+          <div class="hero-meta"><strong>@문탕이</strong></div>
+          <div class="hero-cta">
+            <a href="#showreel" class="cta-primary">제작 과정 보기 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" class="cta-quiet" target="_blank" rel="noopener noreferrer">유튜브 ↗</a>
+          </div>
+        </div>
+        <div class="hero-stage" id="heroStage">
+          <canvas id="hero3d" aria-hidden="true"></canvas><div class="hero-dot-constellation" aria-hidden="true"><i class="constellation-orbit"></i><i class="constellation-orbit constellation-orbit-two"></i><span class="constellation-node constellation-node-one" aria-hidden="true"></span><span class="constellation-node constellation-node-two" aria-hidden="true"></span></div>
+          
+          <div class="paper-motion" aria-hidden="true">
+            <div class="paper-sheet paper-sheet-back"><span class="paper-signature">문탕닷컴<span class="brand-dot">.</span></span><i></i><i></i><i></i></div>
+            <div class="paper-sheet paper-sheet-front"><span class="paper-corner"></span><span class="paper-dot" aria-hidden="true"></span><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="feature-card" id="heroVideo" data-video-id="5D9M7hhDNlY" data-video-title="" role="button" tabindex="0" aria-label="영상 재생">
+            <div class="feature-image"><img id="heroThumbnail" src="https://i.ytimg.com/vi/5D9M7hhDNlY/hqdefault.jpg" alt="영상 썸네일"><span class="feature-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.4c0-.8.87-1.28 1.56-.86l10.04 5.74a1.98 1.98 0 0 1 0 3.44l-10.04 5.74A1.04 1.04 0 0 1 8 18.6V5.4Z"/></svg></span></div>
+            <div class="feature-info"><div class="feature-title" id="heroTitle">영상 불러오는 중</div></div>
+          </div>
+          <div class="float-card" id="heroPeek" data-video-id="JupaczQCTFk" data-video-title="" role="button" tabindex="0" aria-label="다음 영상 재생">
+            <div class="float-image"><img id="peekThumbnail" src="https://i.ytimg.com/vi/JupaczQCTFk/hqdefault.jpg" alt="다음 영상 썸네일"><span class="float-orb" aria-hidden="true"></span></div>
+            <div class="float-info"><span id="peekTitle">영상 불러오는 중</span><span id="peekIndex">02</span></div>
+          </div>
+          <div class="hero-index"><strong id="heroIndex">01</strong><i aria-hidden="true"><b id="heroTimerProgress"></b></i><span id="heroTotal">10</span></div>
+        </div>
+      </div>
+      <div class="hero-bottom"><div class="hero-bottom-inner wrap"><span class="hero-bottom-mark">문탕닷컴<span class="brand-dot">.</span></span></div></div>
+    </section>
+    <section class="scroll-story" id="showreel" aria-label="영상 제작 과정">
+      <div class="scroll-story-sticky" id="storySticky">
+        <div class="story-topline"><span class="story-counter"><strong id="storyCurrent">01</strong><span>/</span><span id="storyTotal">06</span><span class="story-counter-line"><i id="storyProgress"></i><b id="storyProgressDot"></b></span></span></div>
+        <div class="story-track" id="storyTrack">
+<article class="story-panel story-panel--production" data-story-item>
+            <div class="production-copy">
+              
+              <h2 class="production-title">순간을<br><em>놓치지 않게.</em></h2>
+              <p class="production-description">플레이 전체를 녹화하고, 사용할 장면과 다시 확인할 구간을 표시합니다.</p>
+              <div class="production-tags"><span>녹화</span><span>장면 표시</span><span>원본 정리</span></div>
+            </div>
+            <div class="production-art production-art-record" aria-hidden="true">
+              <div class="record-floating-sheet"></div>
+              <div class="record-monitor">
+                <div class="monitor-top"><span class="monitor-red-dot"></span><b>녹화 중</b><span>00:12:48</span></div>
+                <div class="monitor-scene"><div class="monitor-sun"></div><div class="monitor-mountain"></div><div class="monitor-target"><i></i><b></b></div><div class="monitor-scan"></div></div>
+                <div class="monitor-bottom"><span>화면 기록</span><div class="record-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><b>●</b></div>
+              </div>
+              <div class="record-note"><span class="note-dot" aria-hidden="true"></span><b>선택한 장면</b><i></i><i></i><i></i></div>
+              
+            </div>
+          </article>
+<article class="story-panel story-panel--production" data-story-item>
+            <div class="production-copy">
+              
+              <h2 class="production-title">필요한 순간만<br><em>정확하게.</em></h2>
+              <p class="production-description">불필요한 부분을 잘라내고, 장면의 순서와 길이를 조정해 끊김 없는 흐름을 만듭니다.</p>
+              <div class="production-tags"><span>자르기</span><span>순서 조정</span><span>템포</span></div>
+            </div>
+            <div class="production-art production-art-edit" aria-hidden="true">
+              <div class="edit-window">
+                <div class="edit-window-top"><span>편집 타임라인</span><span>00:24:18</span><b>···</b></div>
+                <div class="edit-preview-scene"><div class="preview-shape preview-shape-a"></div><div class="preview-shape preview-shape-b"></div><div class="preview-cross"></div><span>미리 보기</span></div>
+                <div class="edit-ruler"><i>00:00</i><i>00:10</i><i>00:20</i><i>00:30</i><i>00:40</i></div>
+                <div class="edit-track edit-track-video"><span></span><span></span><span></span><span></span><span></span><i class="edit-playhead"></i></div>
+                <div class="edit-track edit-track-audio"><span></span><span></span><span></span><span></span><i class="edit-playhead"></i></div>
+                <div class="edit-track edit-track-detail"><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
+              <div class="edit-blade">✂</div>
+            </div>
+          </article>
+<article class="story-panel story-panel--production" data-story-item>
+            <div class="production-copy">
+              
+              <h2 class="production-title">소리에도<br><em>타이밍을.</em></h2>
+              <p class="production-description">효과음과 배경음의 크기를 조절하고, 화면 전환과 장면의 강조점에 맞춰 배치합니다.</p>
+              <div class="production-tags"><span>효과음</span><span>배경음</span><span>음량 조절</span></div>
+            </div>
+            <div class="production-art production-art-sound" aria-hidden="true">
+              <div class="sound-orbit-rig">
+                <i class="sound-orbit sound-orbit-a"><b></b></i>
+                <i class="sound-orbit sound-orbit-b"><b></b></i>
+                <i class="sound-orbit sound-orbit-c"><b></b></i>
+                <span class="sound-rig-core"></span>
+              </div>
+              <div class="sound-disc"><div class="sound-disc-core"><span class="sound-dot" aria-hidden="true"></span></div></div>
+              <div class="sound-wave-card"><div class="sound-wave-label"><span>소리 파형</span><i></i><b>00:18</b></div><div class="sound-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="sound-baseline"></div></div>
+              <div class="sound-fader"><span>음량</span><i><b></b></i><strong>-6.0 dB</strong></div>
+              
+            </div>
+          </article>
+<article class="story-panel story-panel--production" data-story-item>
+            <div class="production-copy">
+              
+              <h2 class="production-title">움직임 하나로<br><em>장면을 살립니다.</em></h2>
+              <p class="production-description">줌과 화면 이동, 전환 효과를 필요한 순간에만 넣어 시선이 자연스럽게 이어지게 합니다.</p>
+              <div class="production-tags"><span>화면 이동</span><span>전환</span><span>효과</span></div>
+            </div>
+            <div class="production-art production-art-motion" aria-hidden="true">
+              <div class="motion-grid"></div>
+              <div class="motion-path"><svg viewBox="0 0 440 330" preserveAspectRatio="none"><path d="M20 270 C115 260 110 55 215 105 S310 280 420 35" fill="none" stroke="rgba(255,119,0,.85)" stroke-width="2" stroke-dasharray="5 7"/><path d="M20 270 C115 260 110 55 215 105 S310 280 420 35" fill="none" stroke="rgba(255,255,255,.23)" stroke-width="1"/></svg><span class="motion-dot motion-dot-one" aria-hidden="true"></span><span class="motion-dot motion-dot-two" aria-hidden="true"></span></div>
+              <div class="motion-frame motion-frame-back"><i></i><b></b></div><div class="motion-frame motion-frame-front"><i></i><b></b></div>
+              <div class="motion-gizmo"><i></i><i></i><i></i><b></b></div>
+            </div>
+          </article>
+<article class="story-panel story-panel--production" data-story-item>
+            <div class="production-copy">
+              
+              <h2 class="production-title">색을 다듬어<br><em>분위기를 완성</em></h2>
+              <p class="production-description">밝기와 대비, 색 온도를 맞춰 장면 사이의 분위기를 통일하고 화면을 더 선명하게 다듬습니다.</p>
+              <div class="production-tags"><span>색 보정</span><span>최종 확인</span><span>렌더링</span></div>
+            </div>
+            <div class="production-art production-art-finish" aria-hidden="true">
+              <div class="grade-screen"><div class="grade-preview"><i></i><b></b><span></span></div><div class="grade-scopes"><i></i><i></i><i></i></div><div class="grade-wheel grade-wheel-one"><b></b></div><div class="grade-wheel grade-wheel-two"><b></b></div><div class="grade-wheel grade-wheel-three"><b></b></div><div class="grade-label">색 보정</div></div>
+              <div class="finish-stamp"><span>✓</span><b>비포 / 애프터</b><i>색 보정</i></div>
+              <div class="render-orb" aria-hidden="true"><i></i></div>
+            </div>
+          </article>
+          <article class="story-panel story-panel--production" data-story-item>
+            <div class="production-copy">
+              
+              <h2 class="production-title">끝까지 확인하고<br><em>완성합니다.</em></h2>
+              <p class="production-description">화면 잘림과 소리 크기, 장면 연결을 다시 확인한 뒤 최종 영상 파일로 출력합니다.</p>
+              <div class="production-tags"><span>최종 확인</span><span>출력 설정</span><span>완성 파일</span></div>
+            </div>
+            <div class="production-art production-art-output" aria-hidden="true">
+              <div class="output-sheet output-sheet-back"><i></i><i></i><i></i></div>
+              <div class="output-window"><div class="output-window-top"><span class="output-dot"></span><b>최종 출력</b><span>MP4 · 1080p</span></div>
+                <div class="output-preview"><div class="output-orbit"></div><div class="output-scene"></div><span class="output-center-dot" aria-hidden="true"></span></div>
+                <div class="output-checks"><span><i>✓</i> 화면</span><span><i>✓</i> 음량</span><span><i>✓</i> 연결</span></div>
+                <div class="output-progress"><i></i></div><div class="output-progress-label"><span>파일 준비</span><b>완료</b></div>
+              </div><div class="output-finish"><span aria-hidden="true">✓</span><b>완성</b></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+<section class="global" id="global" aria-label="영어 자막과 글로벌 시청자">
+      <div class="global-bg-orbit orbit-one"></div><div class="global-bg-orbit orbit-two"></div><div class="global-bg-glow"></div>
+      <div class="global-inner wrap"><div class="global-label"><span></span> 더 넓은 세상으로</div><h2 class="global-heading"><span class="global-line">언어가 달라도</span><span class="global-line accent">영상은 이어집니다.</span></h2>
+        <div class="global-lower"><div class="global-copy"><p>한국어로 만든 영상에 영어 자막을 더해, 더 많은 시청자와 만나는 새로운 가능성을 엽니다.</p><div class="global-tags"><span>한국어 영상</span><i>→</i><span>영어 자막</span><i>→</i><span>전 세계 시청자</span></div></div>
+          <div class="subtitle-window" aria-label="영어 자막 예시"><div class="subtitle-window-top"><span><i></i> 자막 미리보기</span><span>KO / EN</span></div><div class="subtitle-image"><div class="subtitle-scene-orb"></div><div class="subtitle-scene-grid"></div><div class="subtitle-scene-word">문탕이</div><div class="subtitle-caption-ko">재미있는 이야기를 함께 나눠요.</div><div class="subtitle-caption-en"><span id="globalSubtitleText">Every story can cross a border.</span><i></i></div></div><div class="subtitle-window-bottom"><span class="subtitle-timeline"><i></i></span><span>자막 미리보기</span></div></div>
+        </div>
+      </div>
+    </section>
+    <section class="archive" id="videos">
+      <div class="wrap">
+        <div class="archive-head" data-reveal>
+          <div><div class="archive-kicker">문탕이의 영상</div><h2 class="archive-title">전체 <span>영상</span></h2></div>
+          <div class="archive-count"><strong id="videoCount">—</strong><span>개 영상</span></div>
+        </div>
+        <div class="archive-tools" data-reveal>
+          <span class="archive-filter"><i></i><span id="archiveStatus">영상 불러오는 중</span></span>
+          <label class="video-search"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="videoSearch" type="search" placeholder="영상 검색" autocomplete="off" aria-label="영상 검색"></label>
+        </div>
+        <div class="video-grid" id="videoGrid">
+          <a class="video-card is-visible" href="https://youtu.be/5D9M7hhDNlY" target="_blank" rel="noopener noreferrer" data-video-id="5D9M7hhDNlY">
+            <div class="video-frame"><img src="https://i.ytimg.com/vi/5D9M7hhDNlY/hqdefault.jpg" alt="영상 썸네일"><span class="video-index">01</span><span class="video-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.4c0-.8.87-1.28 1.56-.86l10.04 5.74a1.98 1.98 0 0 1 0 3.44l-10.04 5.74A1.04 1.04 0 0 1 8 18.6V5.4Z"/></svg></span></div>
+            <div class="video-card-text"><span class="video-card-title">영상 불러오는 중</span><span class="video-card-arrow">↗</span></div>
+          </a>
+          <a class="video-card is-visible" href="https://www.youtube.com/watch?v=JupaczQCTFk&amp;t=1s" target="_blank" rel="noopener noreferrer" data-video-id="JupaczQCTFk">
+            <div class="video-frame"><img src="https://i.ytimg.com/vi/JupaczQCTFk/hqdefault.jpg" alt="영상 썸네일"><span class="video-index">02</span><span class="video-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.4c0-.8.87-1.28 1.56-1.56l10.04-5.74A1.04 1.04 0 0 1 18.6V5.4Z" style="display:none"/><path d="M8 5.4c0-.8.87-1.28 1.56-.86l10.04 5.74a1.98 1.98 0 0 1 0 3.44l-10.04 5.74A1.04 1.04 0 0 1 8 18.6V5.4Z"/></svg></span></div>
+            <div class="video-card-text"><span class="video-card-title">영상 불러오는 중</span><span class="video-card-arrow">↗</span></div>
+          </a>
+        </div>
+        <div class="video-load-wrap" id="videoLoadWrap" hidden><button class="video-load" id="loadMore" type="button">더 많은 영상 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14m-7-7 7 7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><div class="footer-inner wrap"><a href="#top" class="footer-brand">문탕닷컴<span class="brand-dot">.</span></a><div class="footer-right"><a href="#top">맨 위로 ↑</a><a href="#videos">전체 영상</a><a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" target="_blank" rel="noopener noreferrer">유튜브 ↗</a></div></div></footer>
+  
+  <div class="video-modal" id="videoModal" hidden aria-hidden="true">
+    <div class="video-modal-backdrop" data-modal-dismiss></div>
+    <section class="video-dialog" id="videoDialog" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle" tabindex="-1">
+      <div class="video-dialog-orbits" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+      <header class="video-dialog-header">
+        <div class="video-modal-mark">문탕닷컴<span class="brand-dot">.</span><span>PLAYER</span></div>
+        <div class="video-dialog-actions">
+          <a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" id="videoModalExternal" target="_blank" rel="noopener noreferrer">유튜브 <b>↗</b></a>
+          <button type="button" id="videoModalClose" class="video-dialog-close" aria-label="영상 창 닫기">×</button>
+        </div>
+      </header>
+      <div class="video-dialog-content">
+        <div class="video-dialog-title-row"><span class="video-live-dot"></span><h2 id="videoModalTitle">유튜브 영상</h2></div>
+        <div class="video-dialog-screen">
+          <div class="video-screen-glow" aria-hidden="true"><i></i><b></b></div>
+          <iframe id="videoModalFrame" title="유튜브 영상 플레이어" src="about:blank" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </div>
+        <div class="video-dialog-footer"><span>문탕닷컴 <i></i> VIDEO ARCHIVE</span><span id="videoModalId">PLAYING</span></div>
+      </div>
+    </section>
+  </div>
+  <div class="ldm-suggestion" id="ldmSuggestion" role="status" aria-live="polite" hidden>
+    <span class="ldm-suggestion-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+    <div class="ldm-suggestion-copy"><strong>프레임 속도가 낮아요.</strong><span id="ldmSuggestionDetail">LDM을 켤까요?</span></div>
+    <button type="button" id="ldmSuggestionEnable">지금 켜기</button>
+    <button type="button" id="ldmSuggestionDismiss" aria-label="알림 닫기">나중에</button>
+  </div>
+
+  <script src="/script.js" defer></script>
+</body>
+</html>
