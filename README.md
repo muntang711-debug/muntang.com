@@ -17,7 +17,7 @@
 
 ## YouTube 영상 정보
 
-사이트는 공개 YouTube oEmbed 메타데이터를 이용해 지정한 영상의 제목과 썸네일을 가져옵니다. 채널의 최근 업로드는 공개 RSS 피드에서 불러옵니다. API 키나 유료 외부 서비스가 필요하지 않습니다.
+사이트는 채널의 공개 동영상 페이지를 읽어 영상 목록과 페이지 넘김 정보를 가져오고, 공개 YouTube oEmbed로 지정 영상의 메타데이터를 보완합니다. 페이지 스크래핑은 YouTube 내부 데이터 구조에 의존하므로 YouTube 측 변경이나 요청 제한에 영향을 받을 수 있습니다. 초기 목록을 가져오지 못하면 공개 RSS 피드와 지정 영상 정보로 대체하며, RSS만 사용할 때는 최근 영상 12개로 제한됩니다. `/api/youtube` 응답은 Cloudflare Cache API를 통해 캐시합니다. API 키나 유료 외부 서비스는 사용하지 않습니다.
 
 - 메타데이터 경로: `/api/youtube`
 - 제목이나 공개 피드를 가져올 수 없는 경우 임의의 제목을 만들어 표시하지 않고 기본 링크를 유지합니다.
@@ -44,6 +44,7 @@ npx wrangler deploy
 .
 ├── worker.js              # YouTube API 및 백엔드 라우팅
 ├── wrangler.jsonc         # Cloudflare Workers 설정
+├── package.json           # 고정된 Wrangler 버전
 ├── public/
 │   ├── index.html         # 페이지 구조
 │   ├── styles.css         # 디자인·반응형·애니메이션
