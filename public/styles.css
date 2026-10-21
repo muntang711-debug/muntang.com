@@ -819,3 +819,70 @@ html,body,.drawer,.video-grid,.video-modal,.video-dialog-content{
   .subtitle-detail{padding:12px 0}
   .subtitle-detail small{font-size:10px}
 }
+
+
+/* Final navigation drawer scrollbar treatment: page scroll is locked separately. */
+html.drawer-open{
+  overflow:hidden!important;
+  overscroll-behavior:none;
+}
+body.drawer-open{
+  overflow:hidden!important;
+  padding-right:0!important;
+}
+.drawer{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,121,0,.65) transparent;
+  scrollbar-gutter:auto;
+}
+.drawer-head{flex:0 0 auto}
+.drawer-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  padding:24px 12px 12px 0;
+  margin-right:-12px;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,121,0,.72) transparent;
+}
+.drawer-body::-webkit-scrollbar{display:block;width:5px;height:5px}
+.drawer-body::-webkit-scrollbar-track{background:rgba(255,255,255,.025);border:0;border-radius:999px;margin:3px 0 5px}
+.drawer-body::-webkit-scrollbar-thumb{min-height:34px;background:linear-gradient(180deg,#ffbf80,#ff7900 68%,#c84c00);border:1px solid rgba(16,14,11,.85);border-radius:999px}
+.drawer-body::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#ffd4a5,#ff9a35 68%,#f05a00)}
+.drawer-body::-webkit-scrollbar-button{display:none;width:0;height:0}
+.drawer-body::-webkit-scrollbar-corner{background:transparent}
+.drawer:before{pointer-events:none}
+.drawer-link{padding:12px 0}
+.drawer-ldm-wrap{padding-top:12px}
+
+/* English-subtitle copy uses intentional paragraphs and predictable line widths. */
+.global-copy{min-width:0}
+.global-copy p{
+  max-width:390px;
+  margin:0;
+  line-height:1.9;
+  word-break:keep-all;
+  overflow-wrap:normal;
+}
+.global-copy p+p{margin-top:14px}
+.subtitle-details{max-width:430px}
+.subtitle-detail small{
+  display:block;
+  max-width:100%;
+  white-space:normal;
+  line-height:1.75;
+  word-break:keep-all;
+  overflow-wrap:break-word;
+}
+.subtitle-window-top>span:last-child{white-space:nowrap}
+@media(max-width:760px){
+  .drawer-body{padding-right:10px;margin-right:-10px}
+  .global-copy p{max-width:none}
+  .global-copy p+p{margin-top:10px}
+  .subtitle-detail small{font-size:10px;line-height:1.7}
+}
