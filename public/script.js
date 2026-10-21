@@ -139,8 +139,9 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
           gl.bindBuffer(gl.ARRAY_BUFFER,mesh.c);gl.vertexAttribPointer(loc.c,3,gl.FLOAT,false,0,0);
           gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,mesh.i);gl.drawElements(gl.TRIANGLES,mesh.count,gl.UNSIGNED_SHORT,0);
         }
-        var w=0,h=0,mouseX=0,mouseY=0,aimX=0,aimY=0,last=0,frame=0,visible=true;
-        var observer=('IntersectionObserver' in window)?new IntersectionObserver(function(entries){visible=entries[0].isIntersecting;if(visible)requestAnimationFrame(render);}):null;
+        var w=0,h=0,mouseX=0,mouseY=0,aimX=0,aimY=0,last=0,frame=0,visible=true,rafId=0;
+        function schedule(){if(!rafId)rafId=requestAnimationFrame(render);}
+        var observer=('IntersectionObserver' in window)?new IntersectionObserver(function(entries){visible=entries[0].isIntersecting;if(visible)schedule();}):null;
         if(observer)observer.observe(canvas);
         function resize(){var rect=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,1.5);var nextW=Math.max(1,Math.round(rect.width*dpr)),nextH=Math.max(1,Math.round(rect.height*dpr));if(canvas.width!==nextW||canvas.height!==nextH){w=nextW;h=nextH;canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}}
         if(window.matchMedia('(pointer:fine)').matches){
@@ -148,8 +149,9 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
           $('#heroStage').addEventListener('pointerleave',function(){aimX=0;aimY=0;});
         }
         function render(now){
+          rafId=0;
           if(document.hidden||(!visible&&observer)||document.body.classList.contains('video-modal-open'))return;
-          if(now-last<30){requestAnimationFrame(render);return;}last=now;
+          if(now-last<30){schedule();return;}last=now;
           if(!w||!h)return;
           mouseX+=(aimX-mouseX)*.035;mouseY+=(aimY-mouseY)*.035;
           var t=(reduced||ldmEnabled)?0:now*.00022;
@@ -166,15 +168,15 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
           draw(sphere,s1,vp);
           var s2=mul(tr(-.62-1.75*Math.cos(t*.52),1.4*Math.sin(t*.52),-4.45+.3*Math.cos(t)),mul(ry(-t),sc(.095,.095,.095)));
           draw(sphere,s2,vp);
-          if(!reduced&&!ldmEnabled)requestAnimationFrame(render);
+          if(!reduced&&!ldmEnabled)schedule();
         }
-        document.addEventListener('visibilitychange',function(){if(!document.hidden)requestAnimationFrame(render);});
-        window.addEventListener('ldmchange',function(){last=0;requestAnimationFrame(render);});
-        window.addEventListener('video-modalchange',function(){last=0;if(!document.hidden)requestAnimationFrame(render);});
-        window.addEventListener('resize',function(){resize();if(!reduced)requestAnimationFrame(render);},{passive:true});
+        document.addEventListener('visibilitychange',function(){if(!document.hidden)schedule();});
+        window.addEventListener('ldmchange',function(){last=0;if(ldmEnabled){if(rafId){cancelAnimationFrame(rafId);rafId=0;}render(performance.now());}else schedule();});
+        window.addEventListener('video-modalchange',function(){last=0;if(!document.hidden&&!document.body.classList.contains('video-modal-open'))schedule();else if(rafId){cancelAnimationFrame(rafId);rafId=0;}});
+        window.addEventListener('resize',function(){resize();if(!reduced&&!ldmEnabled)schedule();},{passive:true});
         var canvasSizeObserver=('ResizeObserver' in window)?new ResizeObserver(function(){resize();}):null;
         if(canvasSizeObserver)canvasSizeObserver.observe(canvas);
-        resize();requestAnimationFrame(render);
+        resize();schedule();
       })();
 
 
@@ -256,27 +258,6 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
       }else if(storySection){
         storySection.classList.add('story-in-view');
       }
-      function buildStoryVideo(video,index){
-        var panel=create('article','story-panel story-panel--video');
-        panel.setAttribute('data-story-item','');
-        var copy=create('div','story-panel-copy');
-        copy.appendChild(create('span','story-chip','문탕이의 영상'));
-        var titleGroup=create('div');
-        titleGroup.appendChild(create('div','story-video-no',String(index+1).padStart(2,'0')));
-        titleGroup.appendChild(create('h3','story-video-title',video.title||'유튜브 영상'));
-        titleGroup.appendChild(create('div','story-video-underline'));
-        copy.appendChild(titleGroup);
-        var watch=create('a','story-watch');watch.href='#player';watch.dataset.videoId=video.id;watch.dataset.videoTitle=video.title||'';
-        watch.appendChild(create('span','영상 보러 가기'));
-        watch.appendChild(create('b','↗'));
-        copy.appendChild(watch);
-        var poster=create('a','story-poster');poster.href='#player';poster.dataset.videoId=video.id;poster.dataset.videoTitle=video.title||'';poster.setAttribute('aria-label',(video.title||'영상')+' 열기');
-        var img=document.createElement('img');img.src=video.thumbnail_url;img.alt=(video.title||'영상')+' 썸네일';img.loading='lazy';img.decoding='async';poster.appendChild(img);
-        poster.appendChild(create('span','story-poster-stamp','영상 재생'));
-        var play=create('span','story-poster-play');play.innerHTML=playSvg;poster.appendChild(play);
-        panel.appendChild(copy);panel.appendChild(poster);
-        return panel;
-      }
       function renderStoryVideos(){ if(storyTrack)fitStory(); }
 
       var playSvg='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.4c0-.8.87-1.28 1.56-.86l10.04 5.74a1.98 1.98 0 0 1 0 3.44l-10.04 5.74A1.04 1.04 0 0 1 8 18.6V5.4Z"/></svg>';
@@ -355,7 +336,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         if(videoModalExternal)videoModalExternal.href='https://www.youtube.com/watch?v='+encodeURIComponent(id);
         if(videoModalId)videoModalId.textContent='VIDEO / '+id;
         videoModalFrame.title=(title||'유튜브 영상')+' 플레이어';
-        videoModalFrame.src='https://www.youtube.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0&playsinline=1&controls=1';
+        videoModalFrame.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0&playsinline=1&controls=1';
         videoModal.hidden=false;
         videoModal.setAttribute('aria-hidden','false');
         document.body.classList.add('video-modal-open');
