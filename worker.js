@@ -364,11 +364,13 @@ async function handleYouTubeApi(request) {
   const results = await Promise.all([
     Promise.all(featuredIds.map(fetchOEmbed)),
     fetchChannelFeed(),
-    fetchChannelVideoPage("")
+    fetchChannelVideoPage(""),
+    fetchChannelShortsPage()
   ]);
   const fetchedFeatured = results[0].filter(Boolean);
   const feed = results[1];
   const page = results[2];
+  const shorts = results[3] || [];
   const featured = featuredIds.map(function(id) {
     return fetchedFeatured.find(function(video) { return video.id === id; }) || {
       id: id,
@@ -379,7 +381,17 @@ async function handleYouTubeApi(request) {
       url: "https://www.youtube.com/watch?v=" + encodeURIComponent(id)
     };
   });
-  let videos = page.videos || [];
+  let videos = (page.videos || []).slice();
+  const videoIds = new Set(videos.map(function(video) { return video.id; }));
+  shorts.forEach(function(video) {
+    if (!videoIds.has(video.id)) { videoIds.add(video.id); videos.push(video); }
+  });
+  videos = videos.map(function(video) {
+    return Object.assign({}, video, {
+      thumbnail_url: "https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg",
+      url: video.type === "short" ? "https://www.youtube.com/shorts/" + video.id : (video.url || "https://www.youtube.com/watch?v=" + video.id)
+    });
+  });
   if (!videos.length) {
     videos = (feed.recent || []).slice();
     featured.forEach(function(video) {
