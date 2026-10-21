@@ -332,8 +332,6 @@
   .hero-carousel-controls{display:none!important}
   
   
-  82%{transform:scale(1.4) rotate(12deg);text-shadow:0 0 16px rgba(255,121,0,.9)}90%{transform:scale(.92) rotate(-8deg);text-shadow:0 0 6px rgba(255,121,0,.7)}}
-  80%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.8)}}
   .hero-bottom-mark:before{display:none}
   .hero-bottom-mark{gap:0;color:#f6eee1;font-size:13px;font-weight:900;letter-spacing:-.04em}
   .paper-motion{position:absolute;z-index:3;inset:0;pointer-events:none;perspective:850px;overflow:visible}
@@ -390,8 +388,6 @@
     .paper-motion .paper-dot{display:grid;place-items:center;width:28px;height:28px;right:14%;top:12%;font-size:28px;text-shadow:0 0 24px var(--orange)}
     
     
-    80%{transform:scale(1.45) rotate(12deg);text-shadow:0 0 18px rgba(255,121,0,.95)}89%{transform:scale(.9) rotate(-9deg);text-shadow:0 0 7px rgba(255,121,0,.75)}}
-    80%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(3)}}
     @keyframes token-beat{0%,100%{transform:scale(.9);box-shadow:0 0 8px rgba(255,119,0,.45)}50%{transform:scale(1.18);box-shadow:0 0 24px rgba(255,119,0,.95)}}
     @keyframes dot-orbit-roll{from{transform:rotate(-21deg)}to{transform:rotate(339deg)}}
     
