@@ -386,7 +386,34 @@ export default {
         return jsonResponse({ error: "Method Not Allowed" }, 405, { "Allow": "GET, HEAD" });
       }
       const continuation = url.searchParams.get("continuation") || "";
-      if (continuation.length > 4096 || (continuation && !/^[A-Za-z0-9._~!
+      if (request.method === "HEAD") {
+        return new Response(null, { status: 200, headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": continuation ? "public, max-age=300, stale-while-revalidate=600" : "public, max-age=300, stale-while-revalidate=900",
+          "X-Content-Type-Options": "nosniff",
+          "Referrer-Policy": "strict-origin-when-cross-origin"
+        }});
+      }
+      if (continuation.length > 4096 || (continuation && !/^[A-Za-z0-9._~!()*+,;=:@%\/-]+$/.test(continuation))) {
+        return jsonResponse({ error: "Invalid continuation token" }, 400, { "Cache-Control": "no-store" });
+      }
+      const cache = caches.default;
+      const cacheRequest = new Request(url.origin + url.pathname + url.search, { method: "GET" });
+      let response = await cache.match(cacheRequest);
+      if (!response) {
+        response = await handleYouTubeApi(new Request(request.url, { method: "GET", headers: request.headers }));
+        if (response.ok) {
+          const headers = new Headers(response.headers);
+          headers.set("Cache-Control", continuation ? "public, max-age=300, stale-while-revalidate=600" : "public, max-age=300, stale-while-revalidate=900");
+          headers.set("X-Content-Type-Options", "nosniff");
+          headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+          headers.set("X-Frame-Options", "DENY");
+          response = new Response(response.body, { status: response.status, headers });
+          await cache.put(cacheRequest, response.clone());
+        }
+      }
+      return response;
+    }
     if (url.pathname === "/sitemap.xml") {
       return new Response('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://muntang-com.muntang711.workers.dev/</loc></url></urlset>\n', {
         headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600", "X-Content-Type-Options": "nosniff" }
