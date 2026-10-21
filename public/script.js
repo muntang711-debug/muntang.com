@@ -17,6 +17,7 @@
         trigger.setAttribute('aria-expanded',String(drawerOpen));
         trigger.setAttribute('aria-label',drawerOpen?'메뉴 닫기':'메뉴 열기');
         drawer.setAttribute('aria-hidden',String(!drawerOpen));
+        drawer.inert=!drawerOpen;
         drawer.classList.toggle('is-open',drawerOpen);
         backdrop.classList.toggle('is-open',drawerOpen);
         if(drawerOpen){previousFocus=document.activeElement;window.setTimeout(function(){var first=$('.drawer-link',drawer);if(first)first.focus();},180);}
@@ -24,7 +25,6 @@
       }
       trigger.addEventListener('click',function(){setDrawer(!drawerOpen);});
       backdrop.addEventListener('click',function(){setDrawer(false);});
-      $$('[data-close-drawer]',drawer).forEach(function(a){a.addEventListener('click',function(){setDrawer(false);});});
       $$('.drawer-link',drawer).forEach(function(a){a.addEventListener('click',function(){if(a.target!=='_blank')setDrawer(false);});});
       document.addEventListener('keydown',function(e){
         if(e.key==='Escape'&&drawerOpen){setDrawer(false);return;}
@@ -342,7 +342,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         document.body.classList.add('video-modal-open');
         modalOpen=true;
         window.dispatchEvent(new Event('video-modalchange'));
-        requestAnimationFrame(function(){if(!ldmEnabled)videoModal.classList.add('is-open');else videoModal.classList.add('is-open');});
+        requestAnimationFrame(function(){videoModal.classList.add('is-open');});
         window.setTimeout(function(){if(modalOpen&&videoDialog)videoDialog.focus({preventScroll:true});},80);
       }
       function closeVideoModal(){
@@ -662,7 +662,6 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
             addVideos(all);
             if(data.featured&&data.featured.length){
               var first=videos.find(function(v){return v.id===data.featured[0].id;})||normalize(data.featured[0]);
-              var second=videos.find(function(v){return v.id===data.featured[1]?.id;})||normalize(data.featured[1]||fallback[1]);
               setFeature(first);
             }else if(videos.length)setFeature(videos[0]);
           }else{addVideos(data.videos||[]);}
