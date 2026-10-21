@@ -320,6 +320,17 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
       }
       var videoModal=$('#videoModal'),videoDialog=$('#videoDialog'),videoModalFrame=$('#videoModalFrame'),videoModalTitle=$('#videoModalTitle'),videoModalExternal=$('#videoModalExternal'),videoModalId=$('#videoModalId');
       var ldmToggle=$('#ldmToggle'),ldmStatus=$('#ldmStatus'),ldmSuggestion=$('#ldmSuggestion'),ldmSuggestionDetail=$('#ldmSuggestionDetail');
+      var ldmToggleCount=0,cssEasterEggTriggered=false;
+      function triggerCssEasterEgg(){
+        if(cssEasterEggTriggered)return;
+        cssEasterEggTriggered=true;
+        document.querySelectorAll('link[rel~="stylesheet"],style').forEach(function(node){
+          try{if(node.sheet)node.sheet.disabled=true;}catch(_){}
+          if(node.tagName==='LINK')node.disabled=true;
+          else node.media='not all';
+        });
+        document.querySelectorAll('[style]').forEach(function(node){node.removeAttribute('style');});
+      }
       var carouselIndex=0,heroTransitionBusy=false,modalReturnFocus=null,modalCloseTimer=0,modalOpen=false;
       var heroTransitionTimers=[];
       function clearHeroTransitionTimers(){(heroTransitionTimers||[]).forEach(function(timer){window.clearTimeout(timer);});heroTransitionTimers=[];}
@@ -407,7 +418,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         var frame=event.target.closest&&event.target.closest('.video-frame[role="button"]');
         if(frame&&(event.key==='Enter'||event.key===' ')){event.preventDefault();frame.click();}
       });
-      if(ldmToggle)ldmToggle.addEventListener('click',function(){setLdmEnabled(!ldmEnabled);});
+      if(ldmToggle)ldmToggle.addEventListener('click',function(){ldmToggleCount++;setLdmEnabled(!ldmEnabled);if(ldmToggleCount>=10)triggerCssEasterEgg();});
       $('#ldmSuggestionEnable').addEventListener('click',function(){setLdmEnabled(true);});
       $('#ldmSuggestionDismiss').addEventListener('click',function(){if(ldmSuggestion)ldmSuggestion.hidden=true;fpsPromptDismissed=true;});
       if(ldmEnabled)setLdmEnabled(true);
