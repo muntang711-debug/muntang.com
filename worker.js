@@ -380,7 +380,7 @@ export default {
       });
     }
     if (url.pathname === "/robots.txt") {
-      return new Response("User-agent: *\\nAllow: /\\n", {
+      return new Response("User-agent: *\nAllow: /\nSitemap: https://muntang-com.muntang711.workers.dev/sitemap.xml\n", {
         headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" }
       });
     }
