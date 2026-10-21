@@ -271,10 +271,28 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
           ob.observe(card);
         }else{card.classList.add('is-visible');}
       }
+      function setVideoThumbnail(img,video){
+        var id=video&&video.id;
+        if(!img||!id)return;
+        var candidates=[
+          'https://i.ytimg.com/vi/'+encodeURIComponent(id)+'/hqdefault.jpg',
+          'https://i.ytimg.com/vi/'+encodeURIComponent(id)+'/mqdefault.jpg',
+          'https://i.ytimg.com/vi/'+encodeURIComponent(id)+'/default.jpg',
+          'https://i.ytimg.com/vi_webp/'+encodeURIComponent(id)+'/hqdefault.webp'
+        ];
+        img.dataset.thumbnailAttempt='0';
+        img.onerror=function(){
+          var next=Number(img.dataset.thumbnailAttempt||0)+1;
+          img.dataset.thumbnailAttempt=String(next);
+          if(next<candidates.length)img.src=candidates[next];
+          else img.onerror=null;
+        };
+        img.src=video.thumbnail_url||candidates[0];
+      }
       function cardFor(video,index){
         var card=create('div','video-card'),frame=create('div','video-frame');
         frame.setAttribute('role','button');frame.tabIndex=0;frame.dataset.videoId=video.id;frame.dataset.videoTitle=video.title||'';frame.setAttribute('aria-label',(video.title||'영상')+' 페이지 안에서 재생');
-        var img=document.createElement('img');img.src=video.thumbnail_url;img.alt=(video.title||'영상')+' 썸네일';img.loading='lazy';img.decoding='async';frame.appendChild(img);
+        var img=document.createElement('img');setVideoThumbnail(img,video);img.alt=(video.title||'영상')+' 썸네일';img.loading='lazy';img.decoding='async';frame.appendChild(img);
         frame.appendChild(create('span','video-index',String(index+1).padStart(2,'0')));
         var play=create('span','video-play');play.innerHTML=playSvg;frame.appendChild(play);card.appendChild(frame);
         var text=create('div','video-card-text'),title=create('div','video-card-title',video.title||'유튜브 영상');
@@ -440,7 +458,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         if(stagedUI&&!main)imageWrap.classList.add('hero-preview-enter');
         var image=(retainedImage&&(retainedImage.getAttribute('src')===video.thumbnail_url||retainedImage.src===video.thumbnail_url))?retainedImage:document.createElement('img');
         image.id=main?'heroThumbnail':'peekThumbnail';
-        image.src=video.thumbnail_url;
+        setVideoThumbnail(image,video);
         image.alt=(video.title||'영상')+' 썸네일';
         image.decoding='async';
         imageWrap.appendChild(image);
