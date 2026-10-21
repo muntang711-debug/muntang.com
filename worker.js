@@ -433,38 +433,3 @@ export default {
     return new Response("Not Found", { status: 404 });
   }
 };
-()*+,;=:@%\/-]+$/.test(continuation))) {
-        return jsonResponse({ error: "Invalid continuation token" }, 400, { "Cache-Control": "no-store" });
-      }
-      const cache = caches.default;
-      const cacheRequest = new Request(url.origin + url.pathname + url.search, { method: "GET" });
-      let response = request.method === "GET" ? await cache.match(cacheRequest) : null;
-      if (!response) {
-        response = await handleYouTubeApi(new Request(request.url, { method: "GET", headers: request.headers }));
-        if (response.ok) {
-          const headers = new Headers(response.headers);
-          headers.set("Cache-Control", continuation ? "public, max-age=300, stale-while-revalidate=600" : "public, max-age=300, stale-while-revalidate=900");
-          headers.set("X-Content-Type-Options", "nosniff");
-          headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-          headers.set("X-Frame-Options", "DENY");
-          response = new Response(response.body, { status: response.status, headers });
-          await cache.put(cacheRequest, response.clone());
-        }
-      }
-      if (request.method === "HEAD") return new Response(null, { status: response.status, headers: response.headers });
-      return response;
-    }
-    if (url.pathname === "/robots.txt") {
-      return new Response("User-agent: *\\nAllow: /\\n", {
-        headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" }
-      });
-    }
-    if (request.method !== "GET" && request.method !== "HEAD") {
-      return new Response("Method Not Allowed", { status: 405, headers: { "Allow": "GET, HEAD" } });
-    }
-    if (env && env.ASSETS) {
-      return env.ASSETS.fetch(request);
-    }
-    return new Response("Not Found", { status: 404 });
-  }
-};
