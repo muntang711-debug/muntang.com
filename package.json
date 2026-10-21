@@ -1,0 +1,13 @@
+{
+  "name": "muntang-com",
+  "private": true,
+  "version": "1.0.0",
+  "description": "문탕닷컴 Cloudflare Worker website",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.31.0"
+  }
+}
