@@ -13,6 +13,7 @@
       function setDrawer(open){
         drawerOpen=!!open;
         document.body.classList.toggle('drawer-open',drawerOpen);
+        document.documentElement.classList.toggle('drawer-open',drawerOpen);
         trigger.setAttribute('aria-expanded',String(drawerOpen));
         trigger.setAttribute('aria-label',drawerOpen?'메뉴 닫기':'메뉴 열기');
         drawer.setAttribute('aria-hidden',String(!drawerOpen));
