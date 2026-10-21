@@ -324,12 +324,18 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
       function triggerCssEasterEgg(){
         if(cssEasterEggTriggered)return;
         cssEasterEggTriggered=true;
-        document.querySelectorAll('link[rel~="stylesheet"],style').forEach(function(node){
-          try{if(node.sheet)node.sheet.disabled=true;}catch(_){}
-          if(node.tagName==='LINK')node.disabled=true;
-          else node.media='not all';
-        });
-        document.querySelectorAll('[style]').forEach(function(node){node.removeAttribute('style');});
+        document.body.classList.add('plain-text-easter-egg');
+        var eggStyle=document.createElement('style');
+        eggStyle.id='plainTextEasterEggStyle';
+        eggStyle.textContent=[
+          'html,body{background:#fff!important;color:#111!important;background-image:none!important;}',
+          'body.plain-text-easter-egg *,body.plain-text-easter-egg *::before,body.plain-text-easter-egg *::after{background:transparent!important;background-image:none!important;box-shadow:none!important;text-shadow:none!important;filter:none!important;backdrop-filter:none!important;animation:none!important;transition:none!important;outline:none!important;border-color:transparent!important;scroll-behavior:auto!important;}',
+          'body.plain-text-easter-egg img,body.plain-text-easter-egg picture,body.plain-text-easter-egg video,body.plain-text-easter-egg iframe,body.plain-text-easter-egg canvas,body.plain-text-easter-egg svg,body.plain-text-easter-egg .hero-orb,body.plain-text-easter-egg .float-orb{display:none!important;}',
+          'body.plain-text-easter-egg *,body.plain-text-easter-egg *::before,body.plain-text-easter-egg *::after{color:#111!important;-webkit-text-fill-color:#111!important;}',
+          'body.plain-text-easter-egg a,body.plain-text-easter-egg button{color:#111!important;text-decoration:underline!important;}',
+          'body.plain-text-easter-egg [hidden]{display:none!important;}'
+        ].join('');
+        document.head.appendChild(eggStyle);
       }
       var carouselIndex=0,heroTransitionBusy=false,modalReturnFocus=null,modalCloseTimer=0,modalOpen=false;
       var heroTransitionTimers=[];
