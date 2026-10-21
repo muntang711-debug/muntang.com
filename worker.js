@@ -336,6 +336,18 @@ async function fetchChannelVideoPage(continuation) {
   }
 }
 
+async function fetchChannelShortsPage() {
+  try {
+    const response = await fetch(channelHandleUrl + "/shorts");
+    if (!response.ok) return [];
+    const html = await response.text();
+    const data = parseEmbeddedJson(html, "var ytInitialData =") || parseEmbeddedJson(html, '"ytInitialData":');
+    return data ? collectYouTubeVideos(data).map(function(video) {
+      return Object.assign({}, video, { thumbnail_url: "https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg", url: "https://www.youtube.com/shorts/" + video.id, type: "short" });
+    }) : [];
+  } catch (_) { return []; }
+}
+
 async function handleYouTubeApi(request) {
   const requestUrl = new URL(request.url);
   const continuation = requestUrl.searchParams.get("continuation") || "";
