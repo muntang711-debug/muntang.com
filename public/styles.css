@@ -1003,3 +1003,32 @@ body.drawer-open{
     font-size: 10px;
   }
 }
+
+
+/* Keep the video popup fully visible on desktop and remove its decorative footer. */
+.video-dialog{
+  width:min(1060px,100%);
+  max-height:calc(100dvh - 32px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:thin;
+}
+.video-dialog-content{
+  padding:clamp(12px,1.6vw,20px);
+}
+.video-dialog-title-row{margin-bottom:10px}
+.video-dialog-screen{
+  width:min(100%,calc((100dvh - 170px) * 16 / 9));
+  max-height:calc(100dvh - 170px);
+  aspect-ratio:16/9;
+  margin-inline:auto;
+}
+@media(max-height:700px) and (min-width:761px){
+  .video-dialog-header{padding:10px 16px}
+  .video-dialog-content{padding:10px 14px}
+  .video-dialog-screen{
+    width:min(100%,calc((100dvh - 130px) * 16 / 9));
+    max-height:calc(100dvh - 130px);
+  }
+  .video-dialog-title-row{margin-bottom:7px}
+}
