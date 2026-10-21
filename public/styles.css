@@ -764,3 +764,58 @@
     body.ldm-mode .video-modal.is-open .video-dialog{opacity:1!important;transform:none!important}
     body.ldm-mode .video-modal .video-modal-backdrop{opacity:1!important}
 
+
+
+/* Compact custom scrollbar */
+html,body,.drawer,.video-grid,.video-modal,.video-dialog-content{
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,121,0,.72) rgba(255,255,255,.035);
+}
+*::-webkit-scrollbar{width:8px;height:8px}
+*::-webkit-scrollbar-track{background:rgba(255,255,255,.035);border-radius:999px}
+*::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#ffb86c,#ff7900 72%,#c64b00);border:2px solid #171511;border-radius:999px;min-height:34px}
+*::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#ffd09a,#ff922a 70%,#e65e00)}
+*::-webkit-scrollbar-corner{background:#12110f}
+*::-webkit-scrollbar-button{display:none;width:0;height:0}
+
+/* A narrower drawer removes the oversized empty panel area on desktop. */
+.drawer{
+  width:min(456px,92vw);
+  padding:28px 30px 26px;
+  overflow-x:hidden;
+  scrollbar-gutter:auto;
+  scrollbar-color:rgba(255,121,0,.7) transparent;
+  scrollbar-width:thin;
+}
+.drawer:before{right:-200px;opacity:.55}
+.drawer-head{padding-bottom:20px}
+.drawer-body{padding-top:25px}
+.drawer-link{gap:11px;padding:13px 0}
+.drawer-link span{font-size:clamp(27px,3vw,34px)}
+.drawer-foot{margin-top:23px}
+.drawer-ldm-wrap{padding-top:14px}
+.drawer-stagger{will-change:auto}
+@media(max-width:760px){
+  .drawer{width:min(430px,100%);padding:24px 23px 24px}
+  .drawer-body{padding-top:23px}
+  .drawer-link{padding:13px 0}
+  .drawer-link span{font-size:32px}
+}
+@media(max-width:420px){
+  .drawer{padding:21px 19px 22px}
+  .drawer-link span{font-size:30px}
+}
+
+/* Specific, readable detail rows for the multilingual-subtitle section. */
+.subtitle-details{display:grid;gap:0;margin-top:27px;border-top:1px solid rgba(255,255,255,.13)}
+.subtitle-detail{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.11)}
+.subtitle-detail>span{padding-top:2px;color:var(--orange);font-size:10px;font-weight:900;letter-spacing:.08em}
+.subtitle-detail>div{display:grid;gap:4px;min-width:0}
+.subtitle-detail b{color:#f7f0e5;font-size:12px;font-weight:900}
+.subtitle-detail small{color:#bcb2a5;font-size:11px;line-height:1.65;word-break:keep-all}
+.subtitle-window-top>span:last-child{white-space:nowrap;color:#ffd0a0;letter-spacing:.025em}
+@media(max-width:760px){
+  .subtitle-details{margin-top:21px}
+  .subtitle-detail{padding:12px 0}
+  .subtitle-detail small{font-size:10px}
+}
