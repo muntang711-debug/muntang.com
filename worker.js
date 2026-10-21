@@ -23,6 +23,9 @@ function jsonResponse(value, status, extraHeaders) {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
       "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+      "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
     }, extraHeaders || {})
   });
 }
@@ -262,17 +265,27 @@ function findYouTubeContinuation(data) {
   return "";
 }
 
+let channelPageHtmlCache = "";
+let channelPageHtmlCacheUntil = 0;
+
 async function fetchChannelVideoPage(continuation) {
   try {
-    const pageResponse = await fetch(channelHandleUrl + "/videos", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8"
-      },
-      redirect: "follow"
-    });
-    if (!pageResponse.ok) return { videos: [], nextContinuation: "" };
-    const pageHtml = await pageResponse.text();
+    let pageHtml = "";
+    if (channelPageHtmlCache && Date.now() < channelPageHtmlCacheUntil) {
+      pageHtml = channelPageHtmlCache;
+    } else {
+      const pageResponse = await fetch(channelHandleUrl + "/videos", {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+          "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8"
+        },
+        redirect: "follow"
+      });
+      if (!pageResponse.ok) return { videos: [], nextContinuation: "" };
+      pageHtml = await pageResponse.text();
+      channelPageHtmlCache = pageHtml;
+      channelPageHtmlCacheUntil = Date.now() + 300000;
+    }
     const apiKeyMatch = pageHtml.match(/"INNERTUBE_API_KEY"\s*:\s*"([^"]+)"/);
     const context = parseEmbeddedJson(pageHtml, '"INNERTUBE_CONTEXT":');
     let pageData = parseEmbeddedJson(pageHtml, "var ytInitialData =");
