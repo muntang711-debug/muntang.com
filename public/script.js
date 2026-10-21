@@ -309,7 +309,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
       function settleHeroCarouselForLdm(){
         if(!heroTransitionBusy)return;
         clearHeroTransitionTimers();
-        var cards=$('#heroStage .feature-card, #heroStage .float-card');
+        var cards=$$('#heroStage .feature-card, #heroStage .float-card');
         if(cards.length<2){heroTransitionBusy=false;return;}
         cards.forEach(function(card){card.classList.remove('hero-handoff-flight');card.removeAttribute('style');});
         var current=videos[carouselIndex],following=videos.length>1?videos[(carouselIndex+1)%videos.length]:null;
