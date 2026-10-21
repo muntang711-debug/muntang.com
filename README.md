@@ -13,7 +13,8 @@
 - YouTube 채널: https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4
 - 추천 영상 01: https://youtu.be/5D9M7hhDNlY
 - 추천 영상 02: https://www.youtube.com/watch?v=JupaczQCTFk&t=1s
-- 사이트 미리보기: https://muntang-com.muntang711.workers.dev
+- 사이트: https://muntang.com
+- www 주소는 https://muntang.com/ 으로 이동합니다.
 
 ## YouTube 영상 정보
 

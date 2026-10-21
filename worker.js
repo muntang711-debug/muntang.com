@@ -381,6 +381,9 @@ async function handleYouTubeApi(request) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.hostname === "www.muntang.com") {
+      return Response.redirect("https://muntang.com" + url.pathname + url.search, 301);
+    }
     if (url.pathname === "/api/youtube") {
       if (request.method !== "GET" && request.method !== "HEAD") {
         return jsonResponse({ error: "Method Not Allowed" }, 405, { "Allow": "GET, HEAD" });
@@ -415,12 +418,12 @@ export default {
       return response;
     }
     if (url.pathname === "/sitemap.xml") {
-      return new Response('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://muntang-com.muntang711.workers.dev/</loc></url></urlset>\n', {
+      return new Response('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://muntang.com/</loc></url></urlset>\n', {
         headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600", "X-Content-Type-Options": "nosniff" }
       });
     }
     if (url.pathname === "/robots.txt") {
-      return new Response("User-agent: *\nAllow: /\nSitemap: https://muntang-com.muntang711.workers.dev/sitemap.xml\n", {
+      return new Response("User-agent: *\nAllow: /\nSitemap: https://muntang.com/sitemap.xml\n", {
         headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" }
       });
     }

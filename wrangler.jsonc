@@ -5,9 +5,21 @@
   "compatibility_date": "2026-10-18",
   "workers_dev": true,
   "upload_source_maps": true,
-  "observability": { "enabled": true },
+  "observability": {
+    "enabled": true
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS"
-  }
+  },
+  "routes": [
+    {
+      "pattern": "muntang.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.muntang.com",
+      "custom_domain": true
+    }
+  ]
 }
