@@ -34,9 +34,12 @@
 Node.js가 설치된 환경에서 아래 명령어를 실행합니다.
 
 ```bash
-npm install --save-dev wrangler
-npx wrangler deploy
+npm install
+npm run dev
+npm run deploy
 ```
+
+`package.json`에 Wrangler 버전을 고정해 빌드 환경에서 임의의 최신 버전이 설치되지 않도록 합니다. 처음 `npm install`을 실행하면 `package-lock.json`이 생성되므로, 이후에는 이 파일도 저장소에 커밋해 설치 버전을 재현 가능하게 유지하세요.
 
 ## 프로젝트 구조
 
