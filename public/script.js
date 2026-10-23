@@ -128,12 +128,12 @@
           });
         });
         document.documentElement.lang=currentLanguage;
-        document.title=currentLanguage==='en'?'Muntang.com — Muntang':'문탕닷컴 — 문탕이';
+        document.title=currentLanguage==='en'?'Muntang.com':'문탕닷컴';
         var desc=document.querySelector('meta[name="description"]');
         if(desc)desc.content=currentLanguage==='en'?"Videos and the creation process from Muntang, including editing and English subtitles.":"문탕이의 유튜브 영상과 제작 과정을 모아 보는 문탕닷컴. 녹화·편집 과정, 영어 자막 작업과 전체 공개 영상을 확인할 수 있습니다.";
         var ogDesc=document.querySelector('meta[property="og:description"]');
         if(ogDesc)ogDesc.content=currentLanguage==='en'?"Explore Muntang's videos, editing process, and English subtitles.":"문탕이의 유튜브 영상과 제작 과정. 녹화부터 편집, 영어 자막 작업까지 문탕이의 영상 세계를 만나 보세요.";
-        var shareTitle=currentLanguage==='en'?'Muntang.com — Muntang':'문탕닷컴 — 문탕이';
+        var shareTitle=currentLanguage==='en'?'Muntang.com':'문탕닷컴';
         var ogTitle=document.querySelector('meta[property="og:title"]');
         var twitterTitle=document.querySelector('meta[name="twitter:title"]');
         var twitterDesc=document.querySelector('meta[name="twitter:description"]');
