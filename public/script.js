@@ -958,7 +958,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
             if(!all.length)all=(Array.isArray(data.recent)?data.recent:[]);
             if(!all.length)all=Array.isArray(data.featured)?data.featured:[];
             addVideos(all);
-            if(data.featured&&data.featured.length)addVideos(data.featured.filter(function(v){return v&&v.type!=='short'&&!/youtube\.com\/shorts\//i.test(String(v.url||''));}));
+            if(data.featured&&data.featured.length)addVideos(data.featured.filter(function(v){return v&&(!seen[v.id])&&v.type!=='short'&&!/youtube\.com\/shorts\//i.test(String(v.url||''));}));
           }else{addVideos(data.videos||[]);}
           nextContinuation=data.nextContinuation||'';
           if(!videos.length)addVideos(fallback);
