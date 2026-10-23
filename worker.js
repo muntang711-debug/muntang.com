@@ -419,7 +419,7 @@ async function fetchChannelShortsPage(language) {
       return video.type === "short";
     }).map(function(video) {
       return Object.assign({}, video, {
-        thumbnail_url: "https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg",
+        thumbnail_url: video.thumbnail_url || ("https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg"),
         url: "https://www.youtube.com/shorts/" + video.id,
         type: "short"
       });
@@ -504,7 +504,7 @@ async function handleYouTubeApi(request) {
   videos = videos.map(function(video) {
     const isShort = video.type === "short" || /youtube\.com\/shorts\//i.test(String(video.url || ""));
     return Object.assign({}, video, {
-      thumbnail_url: "https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg",
+      thumbnail_url: video.thumbnail_url || ("https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg"),
       url: isShort
         ? "https://www.youtube.com/shorts/" + video.id
         : (video.url || "https://www.youtube.com/watch?v=" + video.id),
