@@ -35,6 +35,7 @@
     <nav class="nav wrap" aria-label="주요 메뉴">
       <a href="#top" class="brand" aria-label="문탕닷컴 홈">문탕닷컴<span class="brand-dot">.</span></a>
       <div class="nav-right">
+        <button class="language-toggle" id="languageToggle" type="button" aria-label="Switch site language to English">EN</button>
         <a class="nav-channel" href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" target="_blank" rel="noopener noreferrer" aria-label="유튜브 채널 열기"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12s0 3.6.5 5.8a3 3 0 0 0 2.1 2.1c1.8.5 9.4.5 9.4.5s7.6 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12s0-3.6-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z"/></svg></a>
         <button class="menu-trigger" id="menuTrigger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="siteDrawer"><span class="hamburger" aria-hidden="true"><i></i><i></i><i></i></span></button>
       </div>
@@ -212,11 +213,16 @@
       <div class="wrap">
         <div class="archive-head" data-reveal>
           <div><div class="archive-kicker">문탕이의 영상</div><h2 class="archive-title">전체 <span>영상</span></h2></div>
-          <div class="archive-count"><strong id="videoCount">—</strong><span>개 영상</span></div>
+          <div class="archive-count"><strong id="videoCount">—</strong><span id="videoCountSuffix">개 영상</span></div>
         </div>
         <div class="archive-tools" data-reveal>
           <span class="archive-filter"><i></i><span id="archiveStatus">영상 불러오는 중</span></span>
           <label class="video-search"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="videoSearch" type="search" placeholder="영상 검색" autocomplete="off" aria-label="영상 검색"></label>
+        </div>
+        <div class="video-tabs" role="group" aria-label="영상 종류 필터">
+          <button class="video-tab is-active" type="button" data-video-filter="all" aria-pressed="true">전체</button>
+          <button class="video-tab" type="button" data-video-filter="videos" aria-pressed="false">동영상</button>
+          <button class="video-tab" type="button" data-video-filter="shorts" aria-pressed="false">쇼츠</button>
         </div>
         <div class="video-grid" id="videoGrid">
           <a class="video-card is-visible" href="https://youtu.be/5D9M7hhDNlY" target="_blank" rel="noopener noreferrer" data-video-id="5D9M7hhDNlY">

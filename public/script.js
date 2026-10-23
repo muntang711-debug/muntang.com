@@ -1,11 +1,171 @@
 
     (function(){
       var $=function(selector,root){return (root||document).querySelector(selector);};
-      var $$=function(selector,root){return Array.prototype.slice.call((root||document).querySelectorAll(selector));};
+      var $=function(selector,root){return Array.prototype.slice.call((root||document).querySelectorAll(selector));};
+      var currentLanguage='ko';
+      try{currentLanguage=window.localStorage.getItem('muntang-language')==='en'?'en':'ko';}catch(_){}
+      var languageToggle=$('#languageToggle'),i18nOriginals=Object.create(null),videoArchiveReady=false;
+      var staticTranslations=[
+        {s:'.nav',a:'aria-label',en:['Main navigation']},
+        {s:'#menuTrigger',a:'aria-label',en:['Open menu']},
+        {s:'.nav-channel',a:'aria-label',en:['Open YouTube channel']},
+        {s:'.drawer-links',a:'aria-label',en:['Site links']},
+        {s:'#siteDrawer',a:'aria-label',en:['Site menu']},
+        {s:'.drawer-menu-title',en:['Menu<span class="brand-dot">.</span>']},
+        {s:'.drawer-overline',en:['JUMP TO']},
+        {s:'.drawer-link span',en:['Home','Creation process','English subtitles','All videos']},
+        {s:'.drawer-channel',en:['Open YouTube channel <span>↗</span>']},
+        {s:'.drawer-ldm-toggle',a:'aria-label',en:['Enable Low Detail Mode']},
+        {s:'.hero-title .line',en:["Muntang's",'Video world<span class="brand-dot">.</span>']},
+        {s:'.cta-primary',en:['Explore the process <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>']},
+        {s:'.cta-quiet',en:['YouTube ↗']},
+        {s:'.scroll-story',a:'aria-label',en:['Video creation process']},
+        {s:'.production-title',en:["Capture every moment.<br><em>Miss nothing.</em>","Keep only what matters.<br><em>Make every cut count.</em>","Give every sound<br><em>the right timing.</em>","Move with purpose.<br><em>Bring scenes to life.</em>","Shape the colors.<br><em>Set the mood.</em>","Check every detail.<br><em>Then export.</em>"]},
+        {s:'.production-description',en:['I record the full gameplay and mark the moments worth keeping or reviewing.','I cut unnecessary parts and adjust the order and length to keep the story flowing.','I balance sound effects and music, placing them where transitions and key moments need them.','I use zooms, camera movement, and transitions only where they help guide the viewer.','I tune brightness, contrast, and color temperature to give every scene a clear, consistent look.','I check framing, audio levels, and transitions one last time before exporting the final video.']},
+        {s:'.production-tags span',en:['Recording','Scene markers','Source clips','Cutting','Reordering','Pacing','Sound effects','Music','Volume','Camera movement','Transitions','Effects','Color grading','Final check','Rendering','Final review','Export settings','Final file']},
+        {s:'.monitor-top b',en:['RECORDING']},
+        {s:'.monitor-bottom > span',en:['Screen capture']},
+        {s:'.record-note b',en:['Selected scene']},
+        {s:'.edit-window-top > span:first-child',en:['Editing timeline']},
+        {s:'.edit-preview-scene > span',en:['Preview']},
+        {s:'.sound-wave-label > span:first-child',en:['Audio waveform']},
+        {s:'.sound-fader > span',en:['Volume']},
+        {s:'.grade-label',en:['Color grading']},
+        {s:'.finish-stamp b',en:['Before / After']},
+        {s:'.finish-stamp i',en:['Color grade']},
+        {s:'.output-window-top b',en:['Final export']},
+        {s:'.output-checks span',en:['<i>✓</i> Frame','<i>✓</i> Audio','<i>✓</i> Cuts']},
+        {s:'.output-progress-label span',en:['Preparing file']},
+        {s:'.output-progress-label b',en:['Ready']},
+        {s:'.output-finish b',en:['Complete']},
+        {s:'#global',a:'aria-label',en:['English subtitles']},
+        {s:'.global-label',en:['<span></span> Beyond language']},
+        {s:'.global-heading .global-line',en:['Different languages,','videos still connect.']},
+        {s:'#global .global-copy > p',en:['The Muntang channel currently provides English subtitles.','I translate Korean dialogue, tone, jokes, and game terms into natural English. I also sync each line to the speech and adjust line length and breaks for easy reading.']},
+        {s:'.global-tags span',en:['Korean video','English subtitles','More viewers']},
+        {s:'.subtitle-details',a:'aria-label',en:['English subtitle workflow']},
+        {s:'.subtitle-detail b',en:['Natural translation','Precise timing','Easy-to-read lines']},
+        {s:'.subtitle-detail small',en:['I adapt jokes, tone, and game terms to the context instead of translating every word literally.','I adjust when each subtitle appears and disappears to match the dialogue and scene.','I check line length and display time so subtitles do not move by too quickly.']},
+        {s:'.subtitle-window-top span:first-child',en:['<i></i> English subtitle preview']},
+        {s:'.subtitle-caption-ko',en:["Let's share a great story."]},
+        {s:'.subtitle-window-bottom > span:last-child',en:['Subtitle preview']},
+        {s:'.archive-kicker',en:["MUNTANG'S VIDEOS"]},
+        {s:'.archive-title',en:['All <span>videos</span>']},
+        {s:'#videoCountSuffix',en:['videos']},
+        {s:'.video-tabs',a:'aria-label',en:['Filter by video type']},
+        {s:'[data-video-filter]',en:['All','Videos','Shorts']},
+        {s:'#videoSearch',a:'placeholder',en:['Search videos']},
+        {s:'#videoSearch',a:'aria-label',en:['Search videos']},
+        {s:'#loadMore',en:['Load more videos <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14m-7-7 7 7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>']},
+        {s:'.footer-right a',en:['Back to top ↑','All videos','YouTube ↗']},
+        {s:'#videoModalExternal',en:['YouTube <b>↗</b>']},
+        {s:'#videoModalClose',a:'aria-label',en:['Close video player']},
+        {s:'#archiveStatus',en:['Loading videos']},
+        {s:'meta[property="og:image:alt"]',a:'content',en:['Muntang.com — videos and creation process']},
+        {s:'.ldm-suggestion-copy strong',en:['Frame rate is low.']},
+        {s:'#ldmSuggestionEnable',en:['Enable now']},
+        {s:'#ldmSuggestionDismiss',en:['Later']},
+        {s:'#ldmSuggestionDismiss',a:'aria-label',en:['Dismiss suggestion']}
+      ];
+      function t(key,values){
+        var messages={
+          loading:{ko:'불러오는 중…',en:'Loading…'},
+          loadMore:{ko:'더 많은 영상',en:'Load more videos'},
+          retry:{ko:'다시 시도',en:'Try again'},
+          sharedVideos:{ko:'공유된 영상',en:'Featured videos'},
+          noResults:{ko:'검색 결과가 없습니다.',en:'No search results.'},
+          noVideos:{ko:'공개된 영상이 없습니다.',en:'No public videos found.'},
+          noShorts:{ko:'표시할 쇼츠가 없습니다.',en:'No Shorts to show.'},
+          allCount:{ko:'전체 {count}개 영상',en:'All {count} videos'},
+          videoCount:{ko:'동영상 {count}개',en:'{count} videos'},
+          shortsCount:{ko:'쇼츠 {count}개',en:'{count} Shorts'},
+          searchCount:{ko:'검색 결과 {count}개',en:'{count} search results'},
+          moreAvailable:{ko:' · 더 불러올 수 있습니다',en:' · More available'},
+          menuOpen:{ko:'메뉴 열기',en:'Open menu'},
+          menuClose:{ko:'메뉴 닫기',en:'Close menu'},
+          ldmOn:{ko:'켬',en:'On'},
+          ldmOff:{ko:'끔',en:'Off'},
+          ldmEnable:{ko:'LDM 저사양 모드 켜기',en:'Enable Low Detail Mode'},
+          ldmDisable:{ko:'LDM 저사양 모드 끄기',en:'Disable Low Detail Mode'},
+          ldmPrompt:{ko:'LDM을 켤까요?',en:'Enable Low Detail Mode?'},
+          youtubeVideo:{ko:'유튜브 영상',en:'YouTube video'},
+          thumbnail:{ko:'썸네일',en:'thumbnail'},
+          videoBadge:{ko:'동영상',en:'VIDEO'},
+          shortsBadge:{ko:'쇼츠',en:'SHORTS'},
+          youtubeOpen:{ko:'유튜브에서 영상 열기',en:'Open on YouTube'},
+          play:{ko:'재생',en:'Play'},
+          playOnPage:{ko:'페이지 안에서 재생',en:'Play on this page'},
+          youtubeChannel:{ko:'유튜브 채널 열기',en:'Open YouTube channel'},
+          fpsLow:{ko:'현재 약 {fps} FPS예요. LDM을 켤까요?',en:'Running at about {fps} FPS. Enable Low Detail Mode?'}
+        };
+        var entry=messages[key];
+        var result=entry?(entry[currentLanguage]||entry.ko):key;
+        if(values)Object.keys(values).forEach(function(name){result=result.replace('{'+name+'}',String(values[name]));});
+        return result;
+      }
+      function applyLanguage(language){
+        currentLanguage=language==='en'?'en':'ko';
+        staticTranslations.forEach(function(entry){
+          var nodes=$$(entry.s);
+          nodes.forEach(function(node,index){
+            var property=entry.a||'innerHTML';
+            var cacheKey=entry.s+'|'+property+'|'+index;
+            if(!Object.prototype.hasOwnProperty.call(i18nOriginals,cacheKey)){
+              i18nOriginals[cacheKey]=entry.a?node.getAttribute(entry.a):node.innerHTML;
+            }
+            var source=i18nOriginals[cacheKey];
+            var translated=entry.en&&entry.en[index];
+            if(currentLanguage==='en'&&translated!==undefined){
+              if(entry.a)node.setAttribute(entry.a,translated);else node.innerHTML=translated;
+            }else if(entry.a){
+              if(source===null)node.removeAttribute(entry.a);else node.setAttribute(entry.a,source);
+            }else node.innerHTML=source;
+          });
+        });
+        document.documentElement.lang=currentLanguage;
+        document.title=currentLanguage==='en'?'Muntang.com — Muntang':'문탕닷컴 — 문탕이';
+        var desc=document.querySelector('meta[name="description"]');
+        if(desc)desc.content=currentLanguage==='en'?"Videos and the creation process from Muntang, including editing and English subtitles.":"문탕이의 유튜브 영상과 제작 과정을 모아 보는 문탕닷컴. 녹화·편집 과정, 영어 자막 작업과 전체 공개 영상을 확인할 수 있습니다.";
+        var ogDesc=document.querySelector('meta[property="og:description"]');
+        if(ogDesc)ogDesc.content=currentLanguage==='en'?"Explore Muntang's videos, editing process, and English subtitles.":"문탕이의 유튜브 영상과 제작 과정. 녹화부터 편집, 영어 자막 작업까지 문탕이의 영상 세계를 만나 보세요.";
+        var shareTitle=currentLanguage==='en'?'Muntang.com — Muntang':'문탕닷컴 — 문탕이';
+        var ogTitle=document.querySelector('meta[property="og:title"]');
+        var twitterTitle=document.querySelector('meta[name="twitter:title"]');
+        var twitterDesc=document.querySelector('meta[name="twitter:description"]');
+        if(ogTitle)ogTitle.content=shareTitle;
+        if(twitterTitle)twitterTitle.content=shareTitle;
+        if(twitterDesc)twitterDesc.content=currentLanguage==='en'?"Muntang's videos and creation process.":"문탕이의 유튜브 영상과 제작 과정.";
+        if(languageToggle){
+          languageToggle.textContent=currentLanguage==='en'?'KO':'EN';
+          languageToggle.setAttribute('aria-label',currentLanguage==='en'?'한국어로 전환':'Switch site language to English');
+          languageToggle.setAttribute('aria-pressed',String(currentLanguage==='en'));
+        }
+        var ldmToggleNode=$('#ldmToggle'),ldmStatusNode=$('#ldmStatus');
+        if(ldmToggleNode)ldmToggleNode.setAttribute('aria-label',ldmEnabled?t('ldmDisable'):t('ldmEnable'));
+        if(ldmStatusNode)ldmStatusNode.textContent=ldmEnabled?t('ldmOn'):t('ldmOff');
+        var ldmDetailNode=$('#ldmSuggestionDetail');
+        if(ldmDetailNode){var fpsMatch=ldmDetailNode.textContent.match(/([0-9]+)\s*FPS/i);ldmDetailNode.textContent=fpsMatch?t('fpsLow',{fps:fpsMatch[1]}):t('ldmPrompt');}
+        var heroImage=$('#heroThumbnail'),heroCard=$('#heroVideo'),peekImage=$('#peekThumbnail'),peekCard=$('#heroPeek');
+        if(heroImage)heroImage.alt=heroCard&&heroCard.dataset.videoTitle?heroCard.dataset.videoTitle+' '+t('thumbnail'):(currentLanguage==='en'?'Featured video':'문탕이의 대표 영상');
+        if(peekImage)peekImage.alt=peekCard&&peekCard.dataset.videoTitle?peekCard.dataset.videoTitle+' '+t('thumbnail'):(currentLanguage==='en'?'Next video thumbnail':'다음 영상 썸네일');
+        var heroTitleNode=$('#heroTitle'),peekTitleNode=$('#peekTitle');
+        if(heroTitleNode&&heroCard&&!heroCard.dataset.videoTitle)heroTitleNode.textContent=currentLanguage==='en'?'Featured video':'문탕이의 대표 영상';
+        if(peekTitleNode&&peekCard&&!peekCard.dataset.videoTitle)peekTitleNode.textContent=currentLanguage==='en'?'Next video':'문탕이의 또 다른 영상';
+        var modalTitleNode=$('#videoModalTitle'),modalFrameNode=$('#videoModalFrame');
+        if(modalFrameNode)modalFrameNode.title=(modalTitleNode&&modalTitleNode.textContent?modalTitleNode.textContent:t('youtubeVideo'))+(currentLanguage==='en'?' player':' 플레이어');
+        if(videoArchiveReady)renderVideos();
+      }
+      if(languageToggle)languageToggle.addEventListener('click',function(){
+        var next=currentLanguage==='en'?'ko':'en';
+        try{window.localStorage.setItem('muntang-language',next);}catch(_){}
+        applyLanguage(next);
+      });
+
       var reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       var ldmEnabled=false;
       try{ldmEnabled=window.localStorage.getItem('muntang-ldm')==='1';}catch(_){}
       document.body.classList.toggle('ldm-mode',ldmEnabled);
+      applyLanguage(currentLanguage);
 
       var trigger=$('#menuTrigger'),drawer=$('#siteDrawer'),backdrop=$('#drawerBackdrop');
       document.body.appendChild(trigger);
@@ -15,7 +175,7 @@
         document.body.classList.toggle('drawer-open',drawerOpen);
         document.documentElement.classList.toggle('drawer-open',drawerOpen);
         trigger.setAttribute('aria-expanded',String(drawerOpen));
-        trigger.setAttribute('aria-label',drawerOpen?'메뉴 닫기':'메뉴 열기');
+        trigger.setAttribute('aria-label',drawerOpen?t('menuClose'):t('menuOpen'));
         drawer.setAttribute('aria-hidden',String(!drawerOpen));
         drawer.inert=!drawerOpen;
         drawer.classList.toggle('is-open',drawerOpen);
@@ -185,8 +345,9 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         {id:'5D9M7hhDNlY',title:'영상 01',thumbnail_url:'https://i.ytimg.com/vi/5D9M7hhDNlY/hqdefault.jpg',url:'https://www.youtube.com/watch?v=5D9M7hhDNlY'},
         {id:'JupaczQCTFk',title:'영상 02',thumbnail_url:'https://i.ytimg.com/vi/JupaczQCTFk/hqdefault.jpg',url:'https://www.youtube.com/watch?v=JupaczQCTFk&t=1s'}
       ];
-      var videos=[],nextContinuation='',loading=false,seen={},filtered=[];
+      var videos=[],heroVideos=[],videoFilter='all',nextContinuation='',loading=false,seen={},filtered=[];
       var grid=$('#videoGrid'),count=$('#videoCount'),status=$('#archiveStatus'),loadWrap=$('#videoLoadWrap'),loadButton=$('#loadMore'),search=$('#videoSearch');
+      videoArchiveReady=true;
 
       var storySection=$('#showreel'),storySticky=$('#storySticky'),storyTrack=$('#storyTrack');
       var storyCurrent=$('#storyCurrent'),storyTotal=$('#storyTotal'),storyProgress=$('#storyProgress'),storyProgressDot=$('#storyProgressDot');
@@ -263,7 +424,10 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
       var playSvg='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.4c0-.8.87-1.28 1.56-.86l10.04 5.74a1.98 1.98 0 0 1 0 3.44l-10.04 5.74A1.04 1.04 0 0 1 8 18.6V5.4Z"/></svg>';
       function create(tag,cls,text){var node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;}
       function normalize(v){
-        return {id:v.id||'',title:v.title||'',thumbnail_url:v.thumbnail_url||('https://i.ytimg.com/vi/'+encodeURIComponent(v.id)+'/hqdefault.jpg'),url:v.url||('https://www.youtube.com/watch?v='+encodeURIComponent(v.id)),publishedText:v.publishedText||'',published:v.published||''};
+        var id=v.id||'';
+        var url=v.url||(v.type==='short'?'https://www.youtube.com/shorts/'+encodeURIComponent(id):'https://www.youtube.com/watch?v='+encodeURIComponent(id));
+        var type=v.type||(/youtube\.com\/shorts\//i.test(url)?'short':'');
+        return {id:id,title:v.title||'',thumbnail_url:v.thumbnail_url||('https://i.ytimg.com/vi/'+encodeURIComponent(id)+'/hqdefault.jpg'),url:url,publishedText:v.publishedText||'',published:v.published||'',type:type};
       }
       function observeCard(card){
         if(!reduced&&'IntersectionObserver' in window){
@@ -291,32 +455,55 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
       }
       function cardFor(video,index){
         var card=create('div','video-card'),frame=create('div','video-frame');
-        frame.setAttribute('role','button');frame.tabIndex=0;frame.dataset.videoId=video.id;frame.dataset.videoTitle=video.title||'';frame.setAttribute('aria-label',(video.title||'영상')+' 페이지 안에서 재생');
-        var img=document.createElement('img');setVideoThumbnail(img,video);img.alt=(video.title||'영상')+' 썸네일';img.loading='lazy';img.decoding='async';frame.appendChild(img);
+        frame.setAttribute('role','button');frame.tabIndex=0;frame.dataset.videoId=video.id;frame.dataset.videoTitle=video.title||'';frame.dataset.videoUrl=video.url||'';frame.dataset.videoType=video.type||'';frame.setAttribute('aria-label',(video.title||t('youtubeVideo'))+' — '+t('playOnPage'));
+        var img=document.createElement('img');setVideoThumbnail(img,video);img.alt=(video.title||t('youtubeVideo'))+' '+t('thumbnail');img.loading='lazy';img.decoding='async';frame.appendChild(img);
         frame.appendChild(create('span','video-index',String(index+1).padStart(2,'0')));
+        var isShort=video.type==='short'||String(video.url||'').indexOf('/shorts/')!==-1;
+        frame.appendChild(create('span','video-kind',isShort?t('shortsBadge'):t('videoBadge')));
         var play=create('span','video-play');play.innerHTML=playSvg;frame.appendChild(play);card.appendChild(frame);
-        var text=create('div','video-card-text'),title=create('div','video-card-title',video.title||'유튜브 영상');
+        var text=create('div','video-card-text'),title=create('div','video-card-title',video.title||t('youtubeVideo'));
         if(video.publishedText)title.appendChild(create('span','video-card-date',video.publishedText));
         else if(video.published){var date=new Date(video.published);if(!isNaN(date.getTime()))title.appendChild(create('span','video-card-date',date.toLocaleDateString('ko-KR',{year:'numeric',month:'short',day:'numeric'})));}
         text.appendChild(title);
-        var external=create('a','video-card-arrow','↗');external.href=video.url||('https://www.youtube.com/watch?v='+encodeURIComponent(video.id));external.target='_blank';external.rel='noopener noreferrer';external.setAttribute('aria-label','유튜브에서 영상 열기');external.title='유튜브에서 열기';
+        var external=create('a','video-card-arrow','↗');external.href=video.url||('https://www.youtube.com/watch?v='+encodeURIComponent(video.id));external.target='_blank';external.rel='noopener noreferrer';external.setAttribute('aria-label',t('youtubeOpen'));external.title=t('youtubeOpen');
         text.appendChild(external);card.appendChild(text);observeCard(card);return card;
       }
       function renderVideos(){
         renderStoryVideos();
         var query=(search.value||'').trim().toLocaleLowerCase();
-        filtered=videos.filter(function(v){return !query||(v.title||'').toLocaleLowerCase().includes(query);});
+        filtered=videos.filter(function(v){
+          var isShort=v.type==='short'||/youtube\.com\/shorts\//i.test(String(v.url||''));
+          var matchesType=videoFilter==='all'||(videoFilter==='shorts'?isShort:!isShort);
+          return matchesType&&(!query||(v.title||'').toLocaleLowerCase().includes(query));
+        });
         grid.textContent='';
-        if(!filtered.length){grid.appendChild(create('div','video-empty',query?'검색 결과가 없습니다.':'공개된 영상이 없습니다.'));}
-        else filtered.forEach(function(v,i){grid.appendChild(cardFor(v,i));});
-        count.textContent=String(videos.length).padStart(2,'0');
-        status.textContent=query?'검색 결과 '+filtered.length+'개':(nextContinuation?'채널 영상 · 계속해서 불러올 수 있습니다':'채널 영상');
-        loadWrap.hidden=!nextContinuation||!!query;
+        if(!filtered.length){
+          var emptyMessage=query?t('noResults'):(videoFilter==='shorts'?t('noShorts'):t('noVideos'));
+          grid.appendChild(create('div','video-empty',emptyMessage));
+        }else filtered.forEach(function(v,i){grid.appendChild(cardFor(v,i));});
+        count.textContent=String(filtered.length).padStart(2,'0');
+        var suffix=$('#videoCountSuffix');
+        if(suffix)suffix.textContent=videoFilter==='shorts'?(currentLanguage==='en'?'Shorts':'개 쇼츠'):(currentLanguage==='en'?'videos':(videoFilter==='videos'?'개 동영상':'개 영상'));
+        var statusKey=query?'searchCount':(videoFilter==='shorts'?'shortsCount':(videoFilter==='videos'?'videoCount':'allCount'));
+        status.textContent=t(statusKey,{count:filtered.length})+(!query&&videoFilter==='all'&&nextContinuation?t('moreAvailable'):'');
+        loadWrap.hidden=!nextContinuation||!!query||videoFilter!=='all';
+        $$('[data-video-filter]').forEach(function(button){
+          var active=button.dataset.videoFilter===videoFilter;
+          button.classList.toggle('is-active',active);
+          button.setAttribute('aria-pressed',String(active));
+        });
       }
       function addVideos(list){
         (Array.isArray(list)?list:[]).forEach(function(raw){
           var v=normalize(raw);if(!v.id||seen[v.id])return;seen[v.id]=true;videos.push(v);
         });
+      }
+      function refreshHeroVideos(){
+        heroVideos=videos.filter(function(v){
+          return v.type!=='short'&&!/youtube\.com\/shorts\//i.test(String(v.url||''));
+        });
+        if(!heroVideos.length)heroVideos=fallback.map(function(v){return normalize(v);});
+        if(carouselIndex>=heroVideos.length)carouselIndex=0;
       }
       var videoModal=$('#videoModal'),videoDialog=$('#videoDialog'),videoModalFrame=$('#videoModalFrame'),videoModalTitle=$('#videoModalTitle'),videoModalExternal=$('#videoModalExternal'),videoModalId=$('#videoModalId');
       var ldmToggle=$('#ldmToggle'),ldmStatus=$('#ldmStatus'),ldmSuggestion=$('#ldmSuggestion'),ldmSuggestionDetail=$('#ldmSuggestionDetail');
@@ -337,7 +524,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         ].join('');
         document.head.appendChild(eggStyle);
       }
-      var carouselIndex=0,heroTransitionBusy=false,modalReturnFocus=null,modalCloseTimer=0,modalOpen=false;
+      var carouselIndex=0,heroTransitionBusy=false,modalReturnFocus=null,modalCloseTimer=0,modalOpen=false,activeInlineFrame=null;
       var heroTransitionTimers=[];
       function clearHeroTransitionTimers(){(heroTransitionTimers||[]).forEach(function(timer){window.clearTimeout(timer);});heroTransitionTimers=[];}
       function scheduleHeroTransitionTimeout(callback,delay){var timer=window.setTimeout(function(){heroTransitionTimers=heroTransitionTimers.filter(function(item){return item!==timer;});callback();},delay);heroTransitionTimers.push(timer);return timer;}
@@ -347,7 +534,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         var cards=$$('#heroStage .feature-card, #heroStage .float-card');
         if(cards.length<2){heroTransitionBusy=false;return;}
         cards.forEach(function(card){card.classList.remove('hero-handoff-flight');card.removeAttribute('style');});
-        var current=videos[carouselIndex],following=videos.length>1?videos[(carouselIndex+1)%videos.length]:null;
+        var current=heroVideos[carouselIndex],following=heroVideos.length>1?heroVideos[(carouselIndex+1)%heroVideos.length]:null;
         if(current)renderHeroRole(cards[0],current,'main',true,false);
         if(following)renderHeroRole(cards[1],following,'small',true,false);
         heroTransitionBusy=false;
@@ -356,8 +543,8 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         ldmEnabled=!!enabled;
         document.body.classList.toggle('ldm-mode',ldmEnabled);
         if(ldmEnabled)settleHeroCarouselForLdm();
-        if(ldmToggle){ldmToggle.setAttribute('aria-pressed',String(ldmEnabled));ldmToggle.setAttribute('aria-label',ldmEnabled?'LDM 저사양 모드 끄기':'LDM 저사양 모드 켜기');}
-        if(ldmStatus)ldmStatus.textContent=ldmEnabled?'켬':'끔';
+        if(ldmToggle){ldmToggle.setAttribute('aria-pressed',String(ldmEnabled));ldmToggle.setAttribute('aria-label',ldmEnabled?t('ldmDisable'):t('ldmEnable'));}
+        if(ldmStatus)ldmStatus.textContent=ldmEnabled?t('ldmOn'):t('ldmOff');
         try{window.localStorage.setItem('muntang-ldm',ldmEnabled?'1':'0');}catch(_){}
         if(ldmEnabled&&ldmSuggestion)ldmSuggestion.hidden=true;
         window.dispatchEvent(new Event('ldmchange'));
@@ -367,10 +554,10 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         if(!id||!/^[A-Za-z0-9_-]{11}$/.test(id)||!videoModal||!videoModalFrame)return;
         if(modalCloseTimer){window.clearTimeout(modalCloseTimer);modalCloseTimer=0;}
         modalReturnFocus=card||document.activeElement;
-        if(videoModalTitle)videoModalTitle.textContent=title||'유튜브 영상';
-        if(videoModalExternal)videoModalExternal.href='https://www.youtube.com/watch?v='+encodeURIComponent(id);
+        if(videoModalTitle)videoModalTitle.textContent=title||t('youtubeVideo');
+        if(videoModalExternal)videoModalExternal.href=(card&&card.dataset.videoUrl)||('https://www.youtube.com/watch?v='+encodeURIComponent(id));
         if(videoModalId)videoModalId.textContent='VIDEO / '+id;
-        videoModalFrame.title=(title||'유튜브 영상')+' 플레이어';
+        videoModalFrame.title=(title||t('youtubeVideo'))+(currentLanguage==='en'?' player':' 플레이어');
         videoModalFrame.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0&playsinline=1&controls=1';
         videoModal.hidden=false;
         videoModal.setAttribute('aria-hidden','false');
@@ -397,6 +584,54 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
           modalReturnFocus=null;
         },ldmEnabled?0:360);
       }
+      function restoreInlineVideo(frame){
+        var target=frame||activeInlineFrame;
+        if(!target)return;
+        var originals=target._inlineOriginalNodes;
+        if(originals){
+          target.replaceChildren.apply(target,originals);
+          delete target._inlineOriginalNodes;
+        }
+        target.classList.remove('inline-playing');
+        target.setAttribute('role','button');
+        target.tabIndex=0;
+        target.setAttribute('aria-label',(target.dataset.videoTitle||t('youtubeVideo'))+' — '+t('playOnPage'));
+        if(activeInlineFrame===target)activeInlineFrame=null;
+      }
+      function openInlineVideo(card,id,title){
+        if(!id||!/^[A-Za-z0-9_-]{11}$/.test(id))return;
+        var target=card&&card.matches&&card.matches('.video-frame')?card:null;
+        if(!target&&grid){
+          var isShort=!!(card&&(card.dataset.videoType==='short'||/youtube\.com\/shorts\//i.test(String(card.dataset.videoUrl||''))));
+          videoFilter=isShort?'shorts':'videos';
+          if(search)search.value='';
+          renderVideos();
+          target=Array.prototype.slice.call(grid.querySelectorAll('.video-frame[data-video-id]')).find(function(node){return node.dataset.videoId===id;})||null;
+          if(target)target.scrollIntoView({behavior:reduced?'auto':'smooth',block:'center'});
+        }
+        if(!target)return;
+        if(activeInlineFrame===target&&target.classList.contains('inline-playing'))return;
+        if(activeInlineFrame)restoreInlineVideo(activeInlineFrame);
+        target._inlineOriginalNodes=Array.prototype.slice.call(target.childNodes);
+        target.classList.add('inline-playing');
+        target.setAttribute('role','region');
+        target.tabIndex=-1;
+        target.setAttribute('aria-label',title||t('youtubeVideo'));
+        var iframe=document.createElement('iframe');
+        iframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0&playsinline=1&controls=1';
+        iframe.title=(title||t('youtubeVideo'))+(currentLanguage==='en'?' player':' 플레이어');
+        iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen=true;
+        iframe.referrerPolicy='strict-origin-when-cross-origin';
+        iframe.loading='eager';
+        var close=create('button','inline-player-close','×');
+        close.type='button';
+        close.setAttribute('aria-label',currentLanguage==='en'?'Close video':'영상 닫기');
+        close.title=close.getAttribute('aria-label');
+        close.addEventListener('click',function(event){event.preventDefault();event.stopPropagation();restoreInlineVideo(target);});
+        target.replaceChildren(iframe,close);
+        activeInlineFrame=target;
+      }
       videoModal.addEventListener('click',function(event){
         if(event.target===videoModal||event.target.closest('[data-modal-dismiss]'))closeVideoModal();
       });
@@ -406,9 +641,10 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         var card=event.target.closest&&event.target.closest('[data-video-id]');
         if(!card)return;
         event.preventDefault();
-        openVideoModal(card,card.dataset.videoId,card.dataset.videoTitle||card.getAttribute('aria-label')||'유튜브 영상');
+        openInlineVideo(card,card.dataset.videoId,card.dataset.videoTitle||card.getAttribute('aria-label')||t('youtubeVideo'));
       });
       document.addEventListener('keydown',function(event){
+        if(event.key==='Escape'&&activeInlineFrame){event.preventDefault();restoreInlineVideo();return;}
         if(event.key==='Escape'&&modalOpen){event.preventDefault();closeVideoModal();return;}
         if(modalOpen&&event.key==='Tab'&&videoDialog){
           var focusables=$$('button:not(:disabled),a[href],iframe',videoDialog).filter(function(el){return el.offsetParent!==null;});
@@ -422,7 +658,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         var hero=event.target.closest&&event.target.closest('#heroVideo,#heroPeek');
         if(hero&&(event.key==='Enter'||event.key===' ')){event.preventDefault();hero.click();}
         var frame=event.target.closest&&event.target.closest('.video-frame[role="button"]');
-        if(frame&&(event.key==='Enter'||event.key===' ')){event.preventDefault();frame.click();}
+        if(frame&&!event.target.closest('.inline-player-close')&&!frame.classList.contains('inline-playing')&&(event.key==='Enter'||event.key===' ')){event.preventDefault();frame.click();}
       });
       if(ldmToggle)ldmToggle.addEventListener('click',function(){ldmToggleCount++;setLdmEnabled(!ldmEnabled);if(ldmToggleCount>=10)triggerCssEasterEgg();});
       $('#ldmSuggestionEnable').addEventListener('click',function(){setLdmEnabled(true);});
@@ -444,7 +680,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
           fpsLast=now;fpsFrames=0;
           if(fpsLastEstimate<42)fpsLowWindows++;else fpsLowWindows=0;
           if(fpsLowWindows>=2&&!fpsPromptDismissed&&ldmSuggestion&&!modalOpen){
-            ldmSuggestionDetail.textContent='현재 약 '+fpsLastEstimate+' FPS예요. LDM을 켤까요?';
+            ldmSuggestionDetail.textContent=t('fpsLow',{fps:fpsLastEstimate});
             ldmSuggestion.hidden=false;
           }
         }
@@ -467,16 +703,18 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         card.removeAttribute('href');
         card.dataset.videoId=video.id;
         card.dataset.videoTitle=video.title||'';
+        card.dataset.videoUrl=video.url||'';
+        card.dataset.videoType=video.type||'';
         card.setAttribute('role','button');
         card.setAttribute('tabindex','0');
-        card.setAttribute('aria-label',(video.title||'영상')+' 재생');
+        card.setAttribute('aria-label',(video.title||t('youtubeVideo'))+' '+t('play'));
         card.textContent='';
         var imageWrap=create('div',main?'feature-image':'float-image');
         if(stagedUI&&!main)imageWrap.classList.add('hero-preview-enter');
         var image=(retainedImage&&(retainedImage.getAttribute('src')===video.thumbnail_url||retainedImage.src===video.thumbnail_url))?retainedImage:document.createElement('img');
         image.id=main?'heroThumbnail':'peekThumbnail';
         setVideoThumbnail(image,video);
-        image.alt=(video.title||'영상')+' 썸네일';
+        image.alt=(video.title||t('youtubeVideo'))+' '+t('thumbnail');
         image.decoding='async';
         imageWrap.appendChild(image);
         if(main){
@@ -490,22 +728,22 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         card.appendChild(imageWrap);
         if(main){
           var info=create('div','feature-info');
-          var title=create('div','feature-title',video.title||'유튜브 영상');
+          var title=create('div','feature-title',video.title||t('youtubeVideo'));
           title.id='heroTitle';
           if(stagedUI)title.classList.add('hero-ui-enter','hero-title-enter');
           info.appendChild(title);
           var external=create('a','feature-arrow','↗');
-          external.href='https://www.youtube.com/watch?v='+encodeURIComponent(video.id);
+          external.href=video.url||('https://www.youtube.com/watch?v='+encodeURIComponent(video.id));
           external.target='_blank';
           external.rel='noopener noreferrer';
           external.dataset.externalVideo='true';
-          external.setAttribute('aria-label','유튜브에서 영상 보기');
+          external.setAttribute('aria-label',t('youtubeOpen'));
           if(stagedUI)external.classList.add('hero-ui-enter','hero-arrow-enter');
           info.appendChild(external);
           card.appendChild(info);
         }else{
           var infoSmall=create('div','float-info');
-          var smallTitle=create('span','peek-video-title',video.title||'유튜브 영상');
+          var smallTitle=create('span','peek-video-title',video.title||t('youtubeVideo'));
           smallTitle.id='peekTitle';
           var no=create('span','float-index','');
           no.id='peekIndex';
@@ -524,19 +762,24 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
       }
       function setFeature(video,peek){
         if(!video)return;
-        var main=$('#heroVideo'),small=$('#heroPeek'),index=videos.findIndex(function(item){return item.id===video.id;});carouselIndex=Math.max(0,index);
-        if(!peek&&videos.length>1)peek=videos[(carouselIndex+1)%videos.length];
+        if(!heroVideos.length)return;
+        if(video&&video.type==='short')video=null;
+        if(!video)video=heroVideos[0];
+        var main=$('#heroVideo'),small=$('#heroPeek'),index=heroVideos.findIndex(function(item){return item.id===video.id;});
+        if(index<0){heroVideos.unshift(video);index=0;}
+        carouselIndex=Math.max(0,index);
+        if(!peek||peek.type==='short')peek=heroVideos.length>1?heroVideos[(carouselIndex+1)%heroVideos.length]:null;
         renderHeroRole(main,video,'main',false);if(peek)renderHeroRole(small,peek,'small',false);
-        $('#heroIndex').textContent=String(carouselIndex+1).padStart(2,'0');$('#heroTotal').textContent=String(videos.length).padStart(2,'0');
-        if(peek)$('#peekIndex').textContent=String((videos.findIndex(function(item){return item.id===peek.id;})+1)||2).padStart(2,'0');
+        $('#heroIndex').textContent=String(carouselIndex+1).padStart(2,'0');$('#heroTotal').textContent=String(heroVideos.length).padStart(2,'0');
+        if(peek)$('#peekIndex').textContent=String((heroVideos.findIndex(function(item){return item.id===peek.id;})+1)||2).padStart(2,'0');
       }
       function advanceHero(){
-        if(heroTransitionBusy||videos.length<2||document.visibilityState==='hidden')return false;
+        if(heroTransitionBusy||heroVideos.length<2||document.visibilityState==='hidden')return false;
         if(modalOpen||document.body.classList.contains('video-modal-open'))return false;
         var main=$('#heroVideo'),small=$('#heroPeek');
         if(!main||!small)return false;
-        var nextIndex=(carouselIndex+1)%videos.length;
-        var nextVideo=videos[nextIndex],following=videos[(nextIndex+1)%videos.length];
+        var nextIndex=(carouselIndex+1)%heroVideos.length;
+        var nextVideo=heroVideos[nextIndex],following=heroVideos[(nextIndex+1)%heroVideos.length];
         if(ldmEnabled){
           carouselIndex=nextIndex;
           setFeature(nextVideo,following);
@@ -602,9 +845,9 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
             main.style.transform='rotate(-9deg)';
           });
           var heroTotalNode=$('#heroTotal'),peekIndexNode=$('#peekIndex');
-          if(heroTotalNode)heroTotalNode.textContent=String(videos.length).padStart(2,'0');
-          if(peekIndexNode)peekIndexNode.textContent=String((videos.findIndex(function(item){return item.id===following.id;})+1)||1).padStart(2,'0');
-          preloadHeroThumbnail(videos[(carouselIndex+2)%videos.length]);
+          if(heroTotalNode)heroTotalNode.textContent=String(heroVideos.length).padStart(2,'0');
+          if(peekIndexNode)peekIndexNode.textContent=String((heroVideos.findIndex(function(item){return item.id===following.id;})+1)||1).padStart(2,'0');
+          preloadHeroThumbnail(heroVideos[(carouselIndex+2)%heroVideos.length]);
           scheduleHeroTransitionTimeout(function(){
             main.removeAttribute('style');
             heroTransitionBusy=false;
@@ -668,7 +911,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         heroTimer=requestAnimationFrame(heroCarouselTick);
       }
       function startHeroCarousel(){
-        if(videos.length>2)preloadHeroThumbnail(videos[(carouselIndex+2)%videos.length]);
+        if(heroVideos.length>2)preloadHeroThumbnail(heroVideos[(carouselIndex+2)%heroVideos.length]);
         heroCarouselInitialized=true;
         heroElapsed=0;
         heroCycleStartedAt=0;
@@ -683,7 +926,7 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
 
       async function loadMore(initial){
         if(loading||(!initial&&!nextContinuation))return;
-        loading=true;if(loadButton){loadButton.disabled=true;loadButton.textContent='불러오는 중…';}
+        loading=true;if(loadButton){loadButton.disabled=true;loadButton.textContent=t('loading');}
         try{
           var endpoint='/api/youtube';
           if(!initial){endpoint+='?continuation='+encodeURIComponent(nextContinuation);}
@@ -695,24 +938,28 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
             if(!all.length)all=(Array.isArray(data.recent)?data.recent:[]);
             if(!all.length)all=Array.isArray(data.featured)?data.featured:[];
             addVideos(all);
-            if(data.featured&&data.featured.length){
-              var first=videos.find(function(v){return v.id===data.featured[0].id;})||normalize(data.featured[0]);
-              setFeature(first);
-            }else if(videos.length)setFeature(videos[0]);
+            if(data.featured&&data.featured.length)addVideos(data.featured.filter(function(v){return v&&v.type!=='short'&&!/youtube\.com\/shorts\//i.test(String(v.url||''));}));
           }else{addVideos(data.videos||[]);}
           nextContinuation=data.nextContinuation||'';
           if(!videos.length)addVideos(fallback);
+          refreshHeroVideos();
+          if(initial&&heroVideos.length){
+            var featuredId=data.featured&&data.featured.length?data.featured[0].id:'';
+            var first=heroVideos.find(function(v){return v.id===featuredId;})||heroVideos[0];
+            setFeature(first);
+          }
           renderVideos();
         }catch(error){
-          if(initial&&!videos.length){addVideos(fallback);setFeature(videos[0]);renderVideos();status.textContent='공유된 영상';}
-          else if(loadButton)loadButton.textContent='다시 시도';
+          if(initial&&!videos.length){addVideos(fallback);refreshHeroVideos();if(heroVideos.length)setFeature(heroVideos[0]);renderVideos();status.textContent=t('sharedVideos');}
+          else if(loadButton)loadButton.textContent=t('retry');
         }finally{
           loading=false;
-          if(loadButton){loadButton.disabled=false;loadButton.innerHTML='더 많은 영상 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14m-7-7 7 7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
-          if(initial&&videos.length>1)startHeroCarousel();
+          if(loadButton){loadButton.disabled=false;loadButton.innerHTML=t('loadMore')+' <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14m-7-7 7 7 7-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
+          if(initial&&heroVideos.length>1)startHeroCarousel();
         }
       }
       if(search)search.addEventListener('input',renderVideos);
+      $$('[data-video-filter]').forEach(function(button){button.addEventListener('click',function(){videoFilter=button.dataset.videoFilter||'all';$$('[data-video-filter]').forEach(function(item){var active=item.dataset.videoFilter===videoFilter;item.classList.toggle('is-active',active);item.setAttribute('aria-pressed',String(active));});renderVideos();});});
       if(loadButton)loadButton.addEventListener('click',function(){loadMore(false);});
       renderStoryVideos();
       loadMore(true);

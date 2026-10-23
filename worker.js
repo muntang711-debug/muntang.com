@@ -135,6 +135,36 @@ function textFromYouTubeRuns(value) {
   return "";
 }
 
+function textFromYouTubeContent(value) {
+  if (typeof value === "string") return value;
+  if (!value) return "";
+  if (typeof value.content === "string") return value.content;
+  return textFromYouTubeRuns(value);
+}
+
+function findShortsVideoId(model) {
+  const pending = [model];
+  const visited = new Set();
+  while (pending.length) {
+    const current = pending.pop();
+    if (!current || typeof current !== "object" || visited.has(current)) continue;
+    visited.add(current);
+    const endpoint = current.reelWatchEndpoint || current.watchEndpoint;
+    if (endpoint && typeof endpoint.videoId === "string" && /^[A-Za-z0-9_-]{11}$/.test(endpoint.videoId)) {
+      return endpoint.videoId;
+    }
+    if (current === model && typeof current.videoId === "string" && /^[A-Za-z0-9_-]{11}$/.test(current.videoId)) {
+      return current.videoId;
+    }
+    const keys = Object.keys(current);
+    for (let i = keys.length - 1; i >= 0; i--) {
+      const value = current[keys[i]];
+      if (value && typeof value === "object") pending.push(value);
+    }
+  }
+  return "";
+}
+
 function collectYouTubeVideos(data) {
   const videos = [];
   const seen = new Set();
@@ -146,7 +176,8 @@ function collectYouTubeVideos(data) {
       for (let i = current.length - 1; i >= 0; i--) stack.push(current[i]);
       continue;
     }
-    const lockup = current.lockupViewModel || (current.contentType === "LOCKUP_CONTENT_TYPE_VIDEO" ? current : null);
+    const lockup = current.lockupViewModel ||
+      (/^LOCKUP_CONTENT_TYPE_(?:VIDEO|SHORTS|REEL)$/.test(String(current.contentType || "")) ? current : null);
     if (lockup && typeof lockup.contentId === "string" &&
         /^[A-Za-z0-9_-]{11}$/.test(lockup.contentId) && !seen.has(lockup.contentId)) {
       const lockTitle = lockup.metadata && lockup.metadata.lockupMetadataViewModel &&
@@ -165,12 +196,42 @@ function collectYouTubeVideos(data) {
         ("https://i.ytimg.com/vi/" + lockup.contentId + "/hqdefault.jpg");
       if (lockTitle) {
         seen.add(lockup.contentId);
+        const isShortLockup = /SHORT|REEL/i.test(String(lockup.contentType || ""));
         videos.push({
           id: lockup.contentId,
           title: lockTitle,
           thumbnail_url: lockThumbnail,
           publishedText: metaParts.length ? metaParts[metaParts.length - 1] : "",
-          url: "https://www.youtube.com/watch?v=" + encodeURIComponent(lockup.contentId)
+          url: isShortLockup
+            ? "https://www.youtube.com/shorts/" + encodeURIComponent(lockup.contentId)
+            : "https://www.youtube.com/watch?v=" + encodeURIComponent(lockup.contentId),
+          type: isShortLockup ? "short" : ""
+        });
+      }
+    }
+    const shortsLockup = current.shortsLockupViewModel ||
+      (current.onTap && current.thumbnail && (current.overlayMetadata || current.accessibilityText) ? current : null);
+    if (shortsLockup) {
+      const shortsId = findShortsVideoId(shortsLockup);
+      const overlay = shortsLockup.overlayMetadata || {};
+      const shortsTitle = textFromYouTubeContent(overlay.primaryText) ||
+        textFromYouTubeContent(shortsLockup.title) ||
+        textFromYouTubeContent(shortsLockup.headline) ||
+        textFromYouTubeContent(shortsLockup.accessibilityText);
+      const thumbnailModel = shortsLockup.thumbnail;
+      const thumbnailSources = (thumbnailModel && thumbnailModel.sources) ||
+        (thumbnailModel && thumbnailModel.thumbnailViewModel && thumbnailModel.thumbnailViewModel.image &&
+          thumbnailModel.thumbnailViewModel.image.sources) || [];
+      if (shortsId && shortsTitle && !seen.has(shortsId)) {
+        seen.add(shortsId);
+        videos.push({
+          id: shortsId,
+          title: shortsTitle,
+          thumbnail_url: thumbnailSources.length && thumbnailSources[thumbnailSources.length - 1].url ||
+            "https://i.ytimg.com/vi/" + shortsId + "/hqdefault.jpg",
+          publishedText: textFromYouTubeContent(overlay.secondaryText),
+          url: "https://www.youtube.com/shorts/" + encodeURIComponent(shortsId),
+          type: "short"
         });
       }
     }
@@ -338,13 +399,29 @@ async function fetchChannelVideoPage(continuation) {
 
 async function fetchChannelShortsPage() {
   try {
-    const response = await fetch(channelHandleUrl + "/shorts");
+    const response = await fetch(channelHandleUrl + "/shorts", {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+      },
+      redirect: "follow"
+    });
     if (!response.ok) return [];
     const html = await response.text();
-    const data = parseEmbeddedJson(html, "var ytInitialData =") || parseEmbeddedJson(html, '"ytInitialData":');
-    return data ? collectYouTubeVideos(data).map(function(video) {
-      return Object.assign({}, video, { thumbnail_url: "https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg", url: "https://www.youtube.com/shorts/" + video.id, type: "short" });
-    }) : [];
+    const data = parseEmbeddedJson(html, "var ytInitialData =") ||
+      parseEmbeddedJson(html, 'ytInitialData =') ||
+      parseEmbeddedJson(html, '"ytInitialData":');
+    if (!data) return [];
+    return collectYouTubeVideos(data).filter(function(video) {
+      return video.type === "short";
+    }).map(function(video) {
+      return Object.assign({}, video, {
+        thumbnail_url: "https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg",
+        url: "https://www.youtube.com/shorts/" + video.id,
+        type: "short"
+      });
+    });
   } catch (_) { return []; }
 }
 
@@ -381,15 +458,46 @@ async function handleYouTubeApi(request) {
       url: "https://www.youtube.com/watch?v=" + encodeURIComponent(id)
     };
   });
-  let videos = (page.videos || []).slice();
-  const videoIds = new Set(videos.map(function(video) { return video.id; }));
-  shorts.forEach(function(video) {
-    if (!videoIds.has(video.id)) { videoIds.add(video.id); videos.push(video); }
+  // RSS includes recent uploads that may not appear in the channel's /videos tab, including Shorts.
+  // Put recent feed items first, then add Shorts-page results and the rest of the videos tab without duplicates.
+  let videos = [];
+  const videoIds = new Set();
+  (feed.recent || []).forEach(function(video) {
+    if (video && video.id && !videoIds.has(video.id)) {
+      videoIds.add(video.id);
+      videos.push(video);
+    }
+  });
+  (shorts || []).forEach(function(video) {
+    if (!video || !video.id) return;
+    if (!videoIds.has(video.id)) {
+      videoIds.add(video.id);
+      videos.push(video);
+      return;
+    }
+    // If RSS already contributed this upload, replace its watch URL with the
+    // explicit Shorts entry so the correct destination and type are retained.
+    const existingIndex = videos.findIndex(function(item) { return item.id === video.id; });
+    if (existingIndex >= 0) {
+      videos[existingIndex] = Object.assign({}, videos[existingIndex], video, {
+        published: videos[existingIndex].published || video.published
+      });
+    }
+  });
+  (page.videos || []).forEach(function(video) {
+    if (video && video.id && !videoIds.has(video.id)) {
+      videoIds.add(video.id);
+      videos.push(video);
+    }
   });
   videos = videos.map(function(video) {
+    const isShort = video.type === "short" || /youtube\.com\/shorts\//i.test(String(video.url || ""));
     return Object.assign({}, video, {
       thumbnail_url: "https://i.ytimg.com/vi/" + video.id + "/hqdefault.jpg",
-      url: video.type === "short" ? "https://www.youtube.com/shorts/" + video.id : (video.url || "https://www.youtube.com/watch?v=" + video.id)
+      url: isShort
+        ? "https://www.youtube.com/shorts/" + video.id
+        : (video.url || "https://www.youtube.com/watch?v=" + video.id),
+      type: isShort ? "short" : (video.type || "")
     });
   });
   if (!videos.length) {
@@ -405,7 +513,7 @@ async function handleYouTubeApi(request) {
     featured: featured,
     videos: videos,
     nextContinuation: page.nextContinuation || "",
-    source: "YouTube channel videos, public oEmbed and channel RSS",
+    source: "YouTube channel videos, Shorts, public oEmbed and channel RSS",
     updatedAt: new Date().toISOString()
   });
 }
