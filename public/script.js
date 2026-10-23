@@ -6,6 +6,11 @@
       try{currentLanguage=window.localStorage.getItem('muntang-language')==='en'?'en':'ko';}catch(_){}
       var languageToggle=$('#languageToggle'),i18nOriginals=Object.create(null),videoArchiveReady=false;
       var staticTranslations=[
+        {s:'.brand',en:['Muntang.com<span class="brand-dot">.</span>']},
+        {s:'.paper-signature',en:['Muntang.com<span class="brand-dot">.</span>']},
+        {s:'.hero-bottom-mark',en:['Muntang.com<span class="brand-dot">.</span>']},
+        {s:'.footer-brand',en:['Muntang.com<span class="brand-dot">.</span>']},
+        {s:'.video-modal-mark',en:['Muntang.com<span class="brand-dot">.</span><span>PLAYER</span>']},
         {s:'.nav',a:'aria-label',en:['Main navigation']},
         {s:'#menuTrigger',a:'aria-label',en:['Open menu']},
         {s:'.nav-channel',a:'aria-label',en:['Open YouTube channel']},
