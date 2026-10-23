@@ -158,7 +158,7 @@
         if(peekTitleNode&&peekCard&&!peekCard.dataset.videoTitle)peekTitleNode.textContent=currentLanguage==='en'?'Next video':'문탕이의 또 다른 영상';
         var modalTitleNode=$('#videoModalTitle'),modalFrameNode=$('#videoModalFrame');
         if(modalFrameNode)modalFrameNode.title=(modalTitleNode&&modalTitleNode.textContent?modalTitleNode.textContent:t('youtubeVideo'))+(currentLanguage==='en'?' player':' 플레이어');
-        if(videoArchiveReady)renderVideos();
+        if(videoArchiveReady){renderVideos();loadMore(true);}
       }
       if(languageToggle)languageToggle.addEventListener('click',function(){
         var next=currentLanguage==='en'?'ko':'en';
@@ -500,7 +500,19 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
       }
       function addVideos(list){
         (Array.isArray(list)?list:[]).forEach(function(raw){
-          var v=normalize(raw);if(!v.id||seen[v.id])return;seen[v.id]=true;videos.push(v);
+          var v=normalize(raw);if(!v.id)return;
+          if(seen[v.id]){
+            var existing=videos.find(function(item){return item.id===v.id;});
+            if(existing){
+              if(v.title)existing.title=v.title;
+              if(v.thumbnail_url)existing.thumbnail_url=v.thumbnail_url;
+              if(v.url)existing.url=v.url;
+              if(v.type)existing.type=v.type;
+              if(v.published)existing.published=v.published;
+            }
+            return;
+          }
+          seen[v.id]=true;videos.push(v);
         });
       }
       function refreshHeroVideos(){
@@ -934,7 +946,10 @@ gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.cle
         loading=true;if(loadButton){loadButton.disabled=true;loadButton.textContent=t('loading');}
         try{
           var endpoint='/api/youtube';
-          if(!initial){endpoint+='?continuation='+encodeURIComponent(nextContinuation);}
+          var query=[];
+          if(currentLanguage==='en')query.push('hl=en');
+          if(!initial)query.push('continuation='+encodeURIComponent(nextContinuation));
+          if(query.length)endpoint+='?'+query.join('&');
           var response=await fetch(endpoint,{headers:{'Accept':'application/json'}});
           if(!response.ok)throw new Error('video source unavailable');
           var data=await response.json();
