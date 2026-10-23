@@ -1057,3 +1057,29 @@ html[lang="en"] body,
 html[lang="en"] body * {
   letter-spacing: normal;
 }
+
+
+/* English copy is longer than Korean; let headings wrap and give details room. */
+html[lang="en"] .hero-title .line{white-space:normal}
+html[lang="en"] .hero-title{line-height:1.08;overflow-wrap:anywhere}
+html[lang="en"] .production-title{font-size:clamp(28px,3.8vw,49px);line-height:1.14;letter-spacing:-.035em;word-break:normal;overflow-wrap:anywhere}
+html[lang="en"] .production-description{font-size:clamp(11px,1.05vw,14px);line-height:1.7;word-break:normal;overflow-wrap:anywhere}
+html[lang="en"] .production-copy{min-width:0}
+html[lang="en"] .creation-step-copy h3{font-size:clamp(22px,2.5vw,32px);line-height:1.16;letter-spacing:-.025em;word-break:normal;overflow-wrap:anywhere}
+html[lang="en"] .creation-step-copy p{line-height:1.7;word-break:normal;overflow-wrap:anywhere}
+html[lang="en"] .global-heading{line-height:1.08;letter-spacing:-.035em;word-break:normal;overflow-wrap:anywhere}
+html[lang="en"] .global-copy p,
+html[lang="en"] .subtitle-detail small,
+html[lang="en"] .process-description,
+html[lang="en"] .process-step-sub{word-break:normal;overflow-wrap:anywhere}
+html[lang="en"] .process-title{font-size:clamp(30px,4.4vw,58px);line-height:1.12;letter-spacing:-.035em;word-break:normal;overflow-wrap:anywhere}
+html[lang="en"] .process-step-title{font-size:clamp(14px,1.55vw,20px);letter-spacing:-.02em;overflow-wrap:anywhere}
+html[lang="en"] .video-card-title{letter-spacing:0;word-break:normal;overflow-wrap:anywhere}
+@media(max-width:760px){
+  html[lang="en"] .production-title{font-size:clamp(24px,6.2vw,38px);line-height:1.12}
+  html[lang="en"] .production-description{font-size:11px;line-height:1.6}
+  html[lang="en"] .creation-step-copy h3{font-size:clamp(21px,5.6vw,28px)}
+  html[lang="en"] .global-heading{font-size:clamp(38px,9.5vw,60px)}
+  html[lang="en"] .process-title{font-size:clamp(28px,7.2vw,42px)}
+  html[lang="en"] .process-step-title{font-size:14px}
+}
