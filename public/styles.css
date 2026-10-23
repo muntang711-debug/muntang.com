@@ -1052,10 +1052,10 @@ body.drawer-open{
 .video-kind{position:absolute;z-index:3;top:11px;right:11px;max-width:calc(100% - 96px);overflow:hidden;padding:5px 8px;background:var(--orange);color:#17120b;font-size:9px;font-weight:950;letter-spacing:.08em;text-overflow:ellipsis;white-space:nowrap;pointer-events:none}
 
 
-/* English typography: Korean tracking is too tight for Latin text. */
+/* English uses balanced tracking instead of Korean's tighter spacing. */
 html[lang="en"] body,
 html[lang="en"] body * {
-  letter-spacing: normal;
+  letter-spacing: -0.015em;
 }
 
 
