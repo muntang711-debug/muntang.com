@@ -1,7 +1,7 @@
 
     (function(){
       var $=function(selector,root){return (root||document).querySelector(selector);};
-      var $=function(selector,root){return Array.prototype.slice.call((root||document).querySelectorAll(selector));};
+      var $$=function(selector,root){return Array.prototype.slice.call((root||document).querySelectorAll(selector));};
       var currentLanguage='ko';
       try{currentLanguage=window.localStorage.getItem('muntang-language')==='en'?'en':'ko';}catch(_){}
       var languageToggle=$('#languageToggle'),i18nOriginals=Object.create(null),videoArchiveReady=false;
