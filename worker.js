@@ -335,26 +335,27 @@ function findYouTubeContinuation(data) {
   return "";
 }
 
-let channelPageHtmlCache = "";
-let channelPageHtmlCacheUntil = 0;
+const channelPageHtmlCache = Object.create(null);
+const channelPageHtmlCacheUntil = Object.create(null);
 
-async function fetchChannelVideoPage(continuation) {
+async function fetchChannelVideoPage(continuation, language) {
   try {
+    const lang = language === "en" ? "en" : "ko";
     let pageHtml = "";
-    if (channelPageHtmlCache && Date.now() < channelPageHtmlCacheUntil) {
-      pageHtml = channelPageHtmlCache;
+    if (channelPageHtmlCache[lang] && Date.now() < (channelPageHtmlCacheUntil[lang] || 0)) {
+      pageHtml = channelPageHtmlCache[lang];
     } else {
-      const pageResponse = await fetch(channelHandleUrl + "/videos", {
+      const pageResponse = await fetch(channelHandleUrl + "/videos?hl=" + lang, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-          "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8"
+          "Accept-Language": lang === "en" ? "en-US,en;q=0.9,ko;q=0.7" : "ko-KR,ko;q=0.9,en;q=0.8"
         },
         redirect: "follow"
       });
       if (!pageResponse.ok) return { videos: [], nextContinuation: "" };
       pageHtml = await pageResponse.text();
-      channelPageHtmlCache = pageHtml;
-      channelPageHtmlCacheUntil = Date.now() + 300000;
+      channelPageHtmlCache[lang] = pageHtml;
+      channelPageHtmlCacheUntil[lang] = Date.now() + 300000;
     }
     const apiKeyMatch = pageHtml.match(/"INNERTUBE_API_KEY"\s*:\s*"([^"]+)"/);
     const context = parseEmbeddedJson(pageHtml, '"INNERTUBE_CONTEXT":');
@@ -367,7 +368,7 @@ async function fetchChannelVideoPage(continuation) {
       const clientVersion = clientVersionMatch ? clientVersionMatch[1] :
         (context && context.client && context.client.clientVersion) || "2.20261018.01.00";
       const fallbackContext = {
-        client: { clientName: "WEB", clientVersion: clientVersion, hl: "ko", gl: "KR" }
+        client: { clientName: "WEB", clientVersion: clientVersion, hl: lang, gl: "KR" }
       };
       const response = await fetch("https://www.youtube.com/youtubei/v1/browse?key=" + encodeURIComponent(apiKeyMatch[1]), {
         method: "POST",
@@ -397,12 +398,13 @@ async function fetchChannelVideoPage(continuation) {
   }
 }
 
-async function fetchChannelShortsPage() {
+async function fetchChannelShortsPage(language) {
   try {
-    const response = await fetch(channelHandleUrl + "/shorts", {
+    const lang = language === "en" ? "en" : "ko";
+    const response = await fetch(channelHandleUrl + "/shorts?hl=" + lang, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+        "Accept-Language": lang === "en" ? "en-US,en;q=0.9,ko;q=0.7" : "ko-KR,ko;q=0.9,en;q=0.8",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
       },
       redirect: "follow"
@@ -428,8 +430,9 @@ async function fetchChannelShortsPage() {
 async function handleYouTubeApi(request) {
   const requestUrl = new URL(request.url);
   const continuation = requestUrl.searchParams.get("continuation") || "";
+  const language = requestUrl.searchParams.get("hl") === "en" ? "en" : "ko";
   if (continuation) {
-    const page = await fetchChannelVideoPage(continuation);
+    const page = await fetchChannelVideoPage(continuation, language);
     return jsonResponse({
       ok: true,
       videos: page.videos,
@@ -441,8 +444,8 @@ async function handleYouTubeApi(request) {
   const results = await Promise.all([
     Promise.all(featuredIds.map(fetchOEmbed)),
     fetchChannelFeed(),
-    fetchChannelVideoPage(""),
-    fetchChannelShortsPage()
+    fetchChannelVideoPage("", language),
+    fetchChannelShortsPage(language)
   ]);
   const fetchedFeatured = results[0].filter(Boolean);
   const feed = results[1];
@@ -485,9 +488,17 @@ async function handleYouTubeApi(request) {
     }
   });
   (page.videos || []).forEach(function(video) {
-    if (video && video.id && !videoIds.has(video.id)) {
+    if (!video || !video.id) return;
+    const existingIndex = videos.findIndex(function(item) { return item.id === video.id; });
+    if (existingIndex < 0) {
       videoIds.add(video.id);
       videos.push(video);
+    } else if (language === "en" && video.title) {
+      // Prefer YouTube's English-localized title and thumbnail when available.
+      videos[existingIndex] = Object.assign({}, videos[existingIndex], video, {
+        published: videos[existingIndex].published || video.published,
+        type: videos[existingIndex].type || video.type
+      });
     }
   });
   videos = videos.map(function(video) {
