@@ -93,8 +93,10 @@
             <div class="float-image"><img id="peekThumbnail" src="https://i.ytimg.com/vi/JupaczQCTFk/hqdefault.jpg" alt="다음 영상 썸네일"><span class="float-orb" aria-hidden="true"></span></div>
             <div class="float-info"><span id="peekTitle">문탕이의 또 다른 영상</span><span id="peekIndex">02</span></div>
           </div>
-          <div class="hero-controls" role="group" aria-label="대표 영상 전환"><button type="button" id="heroPrevious" aria-label="이전 영상">←</button><button type="button" id="heroPause" aria-pressed="false">자동 전환 정지</button><button type="button" id="heroNext" aria-label="다음 영상">→</button></div><span class="sr-only" id="heroCarouselStatus" aria-live="polite"></span>
-          <div class="hero-index"><strong id="heroIndex">01</strong><i aria-hidden="true"><b id="heroTimerProgress"></b></i><span id="heroTotal">10</span></div>
+          <div class="hero-pagination">
+            <div class="hero-index"><strong id="heroIndex">01</strong><i aria-hidden="true"><b id="heroTimerProgress"></b></i><span id="heroTotal">10</span></div>
+            <div class="hero-controls" role="group" aria-label="대표 영상 전환"><button type="button" id="heroPrevious" aria-label="이전 영상" title="이전 영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button><button type="button" id="heroPause" aria-label="자동 전환 정지" title="자동 전환 정지" aria-pressed="false"><svg class="hero-control-icon" data-pause-icon viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zm7 0h3v14h-3z"/></svg><svg class="hero-control-icon" data-play-icon viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="m8 5 11 7-11 7z"/></svg></button><button type="button" id="heroNext" aria-label="다음 영상" title="다음 영상"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button></div>
+          </div><span class="sr-only" id="heroCarouselStatus" aria-live="polite"></span>
         </div>
       </div>
       <div class="hero-bottom"><div class="hero-bottom-inner wrap"><span class="hero-bottom-mark">문탕닷컴<span class="brand-dot">.</span></span></div></div>

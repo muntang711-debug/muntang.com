@@ -48,7 +48,10 @@ for (const language of ['ko', 'en']) {
     document.querySelector('.hero-controls').setAttribute('aria-label', 'Featured video slideshow');
     document.querySelector('#heroPrevious').setAttribute('aria-label', 'Previous video');
     document.querySelector('#heroNext').setAttribute('aria-label', 'Next video');
-    document.querySelector('#heroPause').textContent = 'Pause slideshow';
+    for (const [id, label] of [['heroPrevious', 'Previous video'], ['heroNext', 'Next video'], ['heroPause', 'Pause slideshow']]) {
+      document.getElementById(id).setAttribute('aria-label', label);
+      document.getElementById(id).setAttribute('title', label);
+    }
     document.querySelector('.subtitle-example-note').innerHTML = 'The window below demonstrates subtitle translation and placement. <a href="https://www.youtube.com/watch?v=5D9M7hhDNlY&amp;cc_load_policy=1&amp;cc_lang_pref=en" target="_blank" rel="noopener noreferrer">Watch a video with English captions ↗</a>';
     document.querySelector('.subtitle-window').setAttribute('aria-label', 'Subtitle translation example');
   }

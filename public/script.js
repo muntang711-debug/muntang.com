@@ -419,7 +419,12 @@ const slideClock = createSlideClock({
 });
 function syncCarousel() {
   const paused = userPaused || reduced || drawerOpen || activeInlineFrame || document.hidden || !heroInView || heroFocused;
-  $('#heroPause').textContent = reduced ? text('자동 전환 꺼짐', 'Slideshow off') : userPaused ? text('자동 전환 시작', 'Start slideshow') : text('자동 전환 정지', 'Pause slideshow');
+  const pauseButton = $('#heroPause');
+  const label = reduced ? text('자동 전환 꺼짐', 'Slideshow off') : userPaused ? text('자동 전환 시작', 'Start slideshow') : text('자동 전환 정지', 'Pause slideshow');
+  pauseButton.setAttribute('aria-label', label);
+  pauseButton.title = label;
+  $('[data-play-icon]', pauseButton).toggleAttribute('hidden', !userPaused && !reduced);
+  $('[data-pause-icon]', pauseButton).toggleAttribute('hidden', userPaused || reduced);
   $('#heroPause').setAttribute('aria-pressed', String(userPaused));
   $('#heroPause').disabled = reduced;
   slideClock.setRunning(!paused && heroVideos.length > 1);
