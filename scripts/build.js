@@ -60,6 +60,7 @@ for (const language of ['ko', 'en']) {
   document.querySelector('link[href="/styles.css"]').href = outputs.css;
   document.querySelector('script[src="/script.js"]').src = outputs.js;
   document.querySelector('#videoCount').textContent = String(data.videos.length);
+  document.querySelector('#archiveStatus').textContent = '';
 
   document.querySelector('#videoBootstrap').innerHTML = escape(JSON.stringify(data));
   document.querySelector('#videoGrid').innerHTML = data.videos.map((video, index) => `<article class="video-card is-visible"><a href="${escape(video.url)}" target="_blank" rel="noopener noreferrer"><div class="video-frame"><img src="${escape(video.thumbnail_url)}" alt="${escape(video.title)}" width="480" height="360" loading="lazy"><span class="video-index">${index + 1}</span></div><div class="video-card-text"><span class="video-card-title">${escape(video.title)}</span><span class="video-card-arrow" aria-hidden="true">↗</span></div></a></article>`).join('');
