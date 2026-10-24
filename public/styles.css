@@ -871,10 +871,10 @@ html[lang="en"] .video-card-title{letter-spacing:0;word-break:normal;overflow-wr
 .skip-link{position:fixed;z-index:1000;top:10px;left:15px;padding:12px 18px;background:#ff7900;color:#111;transform:translateY(-180%);font-weight:800}
 .skip-link:focus{transform:none}
 a:focus-visible,button:focus-visible,[role="button"]:focus-visible{outline:3px solid #ff7900;outline-offset:4px}
-.hero-pagination{position:absolute;z-index:15;right:4%;bottom:13%;display:grid;gap:8px;width:132px}
+.hero-pagination{position:absolute;z-index:15;right:4%;bottom:13%;display:flex;align-items:stretch;gap:8px;width:max-content}
 .hero-pagination .hero-index,.hero-controls{border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(16,15,13,.43);backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%);box-shadow:0 8px 26px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.08)}
-.hero-pagination .hero-index{position:static;justify-content:center}
-.hero-controls{display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-pagination .hero-index{position:static;justify-content:center;min-width:112px;min-height:46px}
+.hero-controls{display:flex;align-items:center;justify-content:center;overflow:hidden;width:134px;flex:none}
 .hero-controls button{display:grid;place-items:center;flex:1;min-width:44px;min-height:44px;padding:0;border:0;background:transparent;color:#bcb4a8;cursor:pointer;transition:color .2s,background .2s}
 .hero-controls button:hover{color:var(--orange);background:rgba(255,121,0,.08)}
 .hero-controls button:disabled{cursor:default;opacity:.45}
@@ -905,7 +905,7 @@ body:not(.js-ready) .story-panel--production{min-height:500px}
 body:not(.js-ready) .production-copy,body:not(.js-ready) .production-art,body:not(.js-ready) .production-title,body:not(.js-ready) .production-description,body:not(.js-ready) .production-tags{visibility:visible!important;opacity:1!important;transform:none!important}
 body:not(.js-ready) .hero-controls{display:none}
 @media(max-width:760px){
-  .hero-pagination{bottom:17%;gap:7px}
+  .hero-pagination{bottom:4%;gap:7px}
   .hero-stage{margin-top:24px;margin-bottom:12px}
   .story-vertical .story-panel--production{grid-template-columns:1fr;grid-template-rows:auto 310px;min-height:0}
   .story-vertical .production-copy{padding:25px}
