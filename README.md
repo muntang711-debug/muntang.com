@@ -1,59 +1,65 @@
 # 문탕닷컴
 
-문탕이의 유튜브 채널과 영상을 한곳에서 보여 주는 개인 웹사이트입니다.
+문탕이의 영상과 제작 과정을 소개하는 Cloudflare Workers 사이트입니다.
 
-- 채널 색상: `#FF7700`
-- 런타임: Cloudflare Workers
-- 프론트엔드: `public/index.html`, `public/styles.css`, `public/script.js`
-- 백엔드 API: `worker.js`
-- 정적 자산·배포 설정: `wrangler.jsonc`
+- 한국어: https://muntang.com/
+- 영어: https://muntang.com/en/
+- www와 HTTP 요청은 경로·쿼리를 유지하며 HTTPS 루트 도메인으로 이동합니다.
 
-## 링크
+## 개발과 검증
 
-- YouTube 채널: https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4
-- 추천 영상 01: https://youtu.be/5D9M7hhDNlY
-- 추천 영상 02: https://www.youtube.com/watch?v=JupaczQCTFk&t=1s
-- 사이트: https://muntang.com
-- www 주소는 https://muntang.com/ 으로 이동합니다.
+Node.js 22 이상을 사용합니다. 의존성과 전이 의존성은 package-lock.json에 고정합니다.
 
-## YouTube 영상 정보
-
-사이트는 채널의 공개 동영상 페이지를 읽어 영상 목록과 페이지 넘김 정보를 가져오고, 공개 YouTube oEmbed로 지정 영상의 메타데이터를 보완합니다. 페이지 스크래핑은 YouTube 내부 데이터 구조에 의존하므로 YouTube 측 변경이나 요청 제한에 영향을 받을 수 있습니다. 초기 목록을 가져오지 못하면 공개 RSS 피드와 지정 영상 정보로 대체하며, RSS만 사용할 때는 최근 영상 12개로 제한됩니다. `/api/youtube` 응답은 Cloudflare Cache API를 통해 캐시합니다. API 키나 유료 외부 서비스는 사용하지 않습니다.
-
-- 메타데이터 경로: `/api/youtube`
-- 제목이나 공개 피드를 가져올 수 없는 경우 임의의 제목을 만들어 표시하지 않고 기본 링크를 유지합니다.
-
-## 자동 배포
-
-이 저장소의 `main` 브랜치는 Cloudflare Workers Builds에 연결되어 있습니다. 커밋을 푸시하면 Cloudflare가 저장소 루트의 `wrangler.jsonc` 설정을 사용해 자동으로 빌드하고 배포합니다.
-
-- Worker 이름: `muntang-com`
-- 배포 명령: `npx wrangler deploy`
-
-## 로컬 개발 및 수동 배포
-
-Node.js가 설치된 환경에서 아래 명령어를 실행합니다.
-
-```bash
-npm install
+```sh
+npm ci
 npm run dev
-npm run deploy
 ```
 
-`package.json`에 Wrangler 버전을 고정해 빌드 환경에서 임의의 최신 버전이 설치되지 않도록 합니다. 처음 `npm install`을 실행하면 `package-lock.json`이 생성되므로, 이후에는 이 파일도 저장소에 커밋해 설치 버전을 재현 가능하게 유지하세요.
+로컬 주소는 Wrangler가 출력합니다. dev는 localhost 호스트를 사용하므로 운영 도메인의 HTTPS 리다이렉트와 충돌하지 않습니다.
 
-## 프로젝트 구조
+```sh
+npm run check
+npm test
+npx wrangler deploy --dry-run
+npm run smoke -- http://localhost:8787
+```
 
+npm test는 먼저 배포 산출물을 빌드하고 회귀 검사를 실행합니다. HTTP smoke 검사는 실행 중인 서버에 대해 별도로 수행합니다.
+
+## 배포
+
+GitHub main 푸시 → Cloudflare Workers Builds로 자동 배포합니다. 빌드 명령은 npm run check && npm test, 배포 명령은 npx wrangler deploy입니다. 수동 배포는 npm run deploy를 사용합니다.
+
+public/은 원본이며 dist/는 생성 결과입니다. 빌드 시 JavaScript·CSS를 묶고 최소화한 뒤 내용 해시가 포함된 파일명으로 바꿉니다. HTML은 매번 재검증하고 버전이 고정된 자산만 장기 캐시합니다. 헤더와 대표 호스트 처리는 worker.js에서 수행합니다.
+
+## 영상 데이터
+
+lib/youtube.js는 공개 채널의 동영상·쇼츠 페이지, RSS, oEmbed를 수집합니다. YouTube 내부 페이지 구조는 변경될 수 있습니다. 요청과 본문 읽기에는 시간·크기 제한이 있으며 실패는 구조화 로그에 기록합니다. 채널 ID는 UC6XrgnovmMLGkfLDYEUbHww입니다.
+
+lib/catalog.js는 언어·종류·페이지 토큰만으로 캐시 키를 구성합니다. 정상 데이터는 5분간 최신으로 취급하고 최대 7일간 보존합니다. 오래된 데이터는 반환한 뒤 waitUntil로 다시 수집합니다. 첫 요청이나 장애에는 data/의 마지막 확인 목록을 stale 상태로 제공합니다. 실패 결과를 최신 정상 목록으로 캐시하지 않습니다. 페이지 수집 실패는 목록 끝과 구분합니다.
+
+검색은 화면에 불러온 목록 안에서 동작하며 범위를 표시합니다. 동영상과 쇼츠의 다음 페이지 토큰은 각각 관리합니다. 번역된 제목은 YouTube에서 제공하는 경우에만 표시하며 임의로 번역하지 않습니다.
+
+저장된 초기 목록은 다음 명령으로 갱신한 뒤 변경 내용을 검토하고 커밋합니다.
+
+```sh
+npm run snapshot
 ```
-.
-├── worker.js              # YouTube API 및 백엔드 라우팅
-├── wrangler.jsonc         # Cloudflare Workers 설정
-├── package.json           # 고정된 Wrangler 버전
-├── public/
-│   ├── index.html         # 페이지 구조
-│   ├── styles.css         # 디자인·반응형·애니메이션
-│   ├── script.js          # 상호작용·영상·LDM 로직
-│   └── _headers           # 정적 자산 보안·캐시 헤더
-├── README.md
-└── .gitignore
-```
+
+한국어·영어 페이지는 빌드 시 각각 생성됩니다. 영상 제목과 링크도 초기 HTML에 있으므로 JavaScript가 없어도 읽고 YouTube에서 열 수 있습니다. 구조·번역은 public/index.html과 lib/translations.js에서 수정합니다.
+
+## 화면과 접근성
+
+메인 영상은 이전·다음·일시정지를 지원합니다. 화면 밖, 포커스·마우스 진입, 메뉴 열림, 인라인 재생, 동작 감소 및 LDM에서 자동 전환을 멈춥니다. 모바일과 동작 감소 모드의 제작 과정은 세로 목록입니다. 메뉴는 배경 접근을 막고 닫기 버튼을 포함해 포커스를 순환합니다.
+
+Pretendard 1.3.9의 가변 동적 서브셋을 사용하며 필요한 문자 범위만 CDN에서 받습니다. 원본 글꼴 라이선스는 public/fonts/LICENSE.txt에 있습니다.
+
+## 구조
+
+- worker.js: 라우팅·보안·응답 캐시 정책
+- lib/: 영상 수집·캐시·파서·빌드용 번역
+- public/: 화면·상호작용·WebGL·폰트 정의
+- data/: 마지막 확인 영상 목록
+- scripts/: 빌드·구문 검사·HTTP 검사·목록 갱신
+- tests/: 장애·캐시·언어·페이지 처리 회귀 검사
+- .github/workflows/: 푸시/PR 검증

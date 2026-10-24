@@ -21,6 +21,9 @@
   <meta name="twitter:description" content="문탕이의 유튜브 영상과 제작 과정.">
   <meta name="twitter:image" content="https://muntang.com/og-image.png">
   <link rel="canonical" href="https://muntang.com/">
+  <link rel="alternate" hreflang="ko" href="https://muntang.com/">
+  <link rel="alternate" hreflang="en" href="https://muntang.com/en/">
+  <link rel="alternate" hreflang="x-default" href="https://muntang.com/">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
@@ -29,20 +32,21 @@
   
 </head>
 <body>
+  <a class="skip-link" href="#videos">영상 목록으로 건너뛰기</a>
   <noscript><div style="padding:110px 24px 24px;background:#090909;color:#fffaf2;text-align:center">문탕닷컴은 영상 정보를 불러오기 위해 JavaScript가 필요합니다. <a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" rel="noopener noreferrer">문탕이 유튜브 채널</a></div></noscript>
   <div class="top-progress" aria-hidden="true"><span id="progressBar"></span></div>
   <header class="header">
     <nav class="nav wrap" aria-label="주요 메뉴">
       <a href="#top" class="brand" aria-label="문탕닷컴 홈">문탕닷컴<span class="brand-dot">.</span></a>
       <div class="nav-right">
-        <button class="language-toggle" id="languageToggle" type="button" aria-label="Switch site language to English">EN</button>
+        <a class="language-toggle" id="languageToggle" href="/en/" lang="en" aria-label="Switch site language to English">EN</a>
         <a class="nav-channel" href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" target="_blank" rel="noopener noreferrer" aria-label="유튜브 채널 열기"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12s0 3.6.5 5.8a3 3 0 0 0 2.1 2.1c1.8.5 9.4.5 9.4.5s7.6 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12s0-3.6-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z"/></svg></a>
         <button class="menu-trigger" id="menuTrigger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="siteDrawer"><span class="hamburger" aria-hidden="true"><i></i><i></i><i></i></span></button>
       </div>
     </nav>
   </header>
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
-  <aside class="drawer" id="siteDrawer" aria-hidden="true" inert aria-label="사이트 메뉴">
+  <aside class="drawer" id="siteDrawer" aria-hidden="true" inert role="dialog" aria-modal="true" aria-label="사이트 메뉴">
     <div class="drawer-head"><div class="drawer-menu-title">메뉴<span class="brand-dot">.</span></div></div>
     <div class="drawer-body">
       <div class="drawer-overline drawer-stagger">바로 이동</div>
@@ -54,7 +58,7 @@
       </nav>
       <div class="drawer-ldm-wrap drawer-stagger">
         <button class="drawer-ldm-toggle" id="ldmToggle" type="button" aria-pressed="false" aria-label="LDM 저사양 모드 켜기">
-          <span class="ldm-copy"><b>LDM</b><small>Low Detail Mod</small></span>
+          <span class="ldm-copy"><b>LDM</b><small>Low Detail Mode</small></span>
           <span class="ldm-state" id="ldmStatus">끔</span>
           <span class="ldm-switch" aria-hidden="true"><i></i></span>
         </button>
@@ -70,8 +74,8 @@
           <h1 class="hero-title"><span class="line">문탕이의</span><span class="line accent">영상 세계<span class="brand-dot">.</span></span></h1>
           <div class="hero-meta"><strong>@문탕이</strong></div>
           <div class="hero-cta">
-            <a href="#showreel" class="cta-primary">제작 과정 보기 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-            <a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" class="cta-quiet" target="_blank" rel="noopener noreferrer">유튜브 ↗</a>
+            <a href="#videos" class="cta-primary">영상 보기 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a href="#showreel" class="cta-quiet">제작 과정 보기 ↘</a>
           </div>
         </div>
         <div class="hero-stage" id="heroStage">
@@ -89,6 +93,7 @@
             <div class="float-image"><img id="peekThumbnail" src="https://i.ytimg.com/vi/JupaczQCTFk/hqdefault.jpg" alt="다음 영상 썸네일"><span class="float-orb" aria-hidden="true"></span></div>
             <div class="float-info"><span id="peekTitle">문탕이의 또 다른 영상</span><span id="peekIndex">02</span></div>
           </div>
+          <div class="hero-controls" role="group" aria-label="대표 영상 전환"><button type="button" id="heroPrevious" aria-label="이전 영상">←</button><button type="button" id="heroPause" aria-pressed="false">자동 전환 정지</button><button type="button" id="heroNext" aria-label="다음 영상">→</button></div><span class="sr-only" id="heroCarouselStatus" aria-live="polite"></span>
           <div class="hero-index"><strong id="heroIndex">01</strong><i aria-hidden="true"><b id="heroTimerProgress"></b></i><span id="heroTotal">10</span></div>
         </div>
       </div>
@@ -204,20 +209,20 @@
 <section class="global" id="global" aria-label="현재 영어 자막 안내">
       <div class="global-bg-orbit orbit-one"></div><div class="global-bg-orbit orbit-two"></div><div class="global-bg-glow"></div>
       <div class="global-inner wrap"><div class="global-label"><span></span> 더 넓은 세상으로</div><h2 class="global-heading"><span class="global-line">언어가 달라도</span><span class="global-line accent">영상은 이어집니다.</span></h2>
-        <div class="global-lower"><div class="global-copy"><p>현재 문탕이 채널에서 제공하는 자막은 영어입니다.</p><p>한국어 대사의 의미와 말투, 농담과 게임 용어를 문맥에 맞게 영어로 옮깁니다. 자막의 시작과 끝을 실제 발화에 맞추고, 한눈에 읽기 편하도록 줄 길이와 줄바꿈도 확인합니다.</p><div class="global-tags"><span>한국어 영상</span><i>→</i><span>영어 자막</span><i>→</i><span>더 넓은 시청자</span></div><div class="subtitle-details" aria-label="영어 자막 작업"><div class="subtitle-detail"><span>01</span><div><b>뜻을 살린 번역</b><small>말투와 농담, 게임 용어를 단어 그대로 옮기기보다 대화의 맥락에 맞게 다듬습니다.</small></div></div><div class="subtitle-detail"><span>02</span><div><b>정확한 자막 싱크</b><small>대사와 장면에 맞춰 자막이 나타나는 시점과 사라지는 시점을 조정합니다.</small></div></div><div class="subtitle-detail"><span>03</span><div><b>읽기 쉬운 줄바꿈</b><small>한 줄의 길이와 화면에 표시되는 시간을 확인해 자막이 너무 빠르게 지나가지 않도록 합니다.</small></div></div></div></div>
-          <div class="subtitle-window" aria-label="영어 자막 예시"><div class="subtitle-window-top"><span><i></i> 영어 자막 미리보기</span><span>KO → EN</span></div><div class="subtitle-image"><div class="subtitle-scene-orb"></div><div class="subtitle-scene-grid"></div><div class="subtitle-scene-word">문탕이</div><div class="subtitle-caption-ko">재미있는 이야기를 함께 나눠요.</div><div class="subtitle-caption-en"><span id="globalSubtitleText">Every story can cross a border.</span><i></i></div></div><div class="subtitle-window-bottom"><span class="subtitle-timeline"><i></i></span><span>자막 미리보기</span></div></div>
+        <div class="global-lower"><div class="global-copy"><p>현재 문탕이 채널에서 제공하는 자막은 영어입니다.</p><p>한국어 대사의 의미와 말투, 농담과 게임 용어를 문맥에 맞게 영어로 옮깁니다. 자막의 시작과 끝을 실제 발화에 맞추고, 한눈에 읽기 편하도록 줄 길이와 줄바꿈도 확인합니다.</p><p class="subtitle-example-note">아래 자막 창은 번역·배치 예시입니다. <a href="https://www.youtube.com/watch?v=5D9M7hhDNlY&amp;cc_load_policy=1&amp;cc_lang_pref=en" target="_blank" rel="noopener noreferrer">실제 영상에서 영어 자막 보기 ↗</a></p><div class="global-tags"><span>한국어 영상</span><i>→</i><span>영어 자막</span><i>→</i><span>더 넓은 시청자</span></div><div class="subtitle-details" aria-label="영어 자막 작업"><div class="subtitle-detail"><span>01</span><div><b>뜻을 살린 번역</b><small>말투와 농담, 게임 용어를 단어 그대로 옮기기보다 대화의 맥락에 맞게 다듬습니다.</small></div></div><div class="subtitle-detail"><span>02</span><div><b>정확한 자막 싱크</b><small>대사와 장면에 맞춰 자막이 나타나는 시점과 사라지는 시점을 조정합니다.</small></div></div><div class="subtitle-detail"><span>03</span><div><b>읽기 쉬운 줄바꿈</b><small>한 줄의 길이와 화면에 표시되는 시간을 확인해 자막이 너무 빠르게 지나가지 않도록 합니다.</small></div></div></div></div>
+          <div class="subtitle-window" aria-label="영어 자막 예시"><div class="subtitle-window-top"><span><i></i> 영어 자막 미리보기</span><span>KO → EN</span></div><div class="subtitle-image"><div class="subtitle-scene-orb"></div><div class="subtitle-scene-grid"></div><div class="subtitle-scene-word">문탕이</div><div class="subtitle-caption-ko">재미있는 이야기를 함께 나눠요.</div><div class="subtitle-caption-en"><span id="globalSubtitleText">Let’s share a fun story.</span><i></i></div></div><div class="subtitle-window-bottom"><span class="subtitle-timeline"><i></i></span><span>자막 미리보기</span></div></div>
         </div>
       </div>
     </section>
     <section class="archive" id="videos">
       <div class="wrap">
         <div class="archive-head" data-reveal>
-          <div><div class="archive-kicker">문탕이의 영상</div><h2 class="archive-title">전체 <span>영상</span></h2></div>
+          <div><div class="archive-kicker">문탕이의 영상</div><h2 class="archive-title">영상 <span>목록</span></h2></div>
           <div class="archive-count"><strong id="videoCount">—</strong><span id="videoCountSuffix">개 영상</span></div>
         </div>
         <div class="archive-tools" data-reveal>
-          <span class="archive-filter"><i></i><span id="archiveStatus">영상 불러오는 중</span></span>
-          <label class="video-search"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="videoSearch" type="search" placeholder="영상 검색" autocomplete="off" aria-label="영상 검색"></label>
+          <span class="archive-filter"><i></i><span id="archiveStatus" role="status" aria-live="polite" aria-atomic="true">저장된 영상 목록</span></span>
+          <label class="video-search"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="videoSearch" type="search" placeholder="불러온 영상에서 검색" autocomplete="off" aria-label="불러온 영상에서 검색"></label>
         </div>
         <div class="video-tabs" role="group" aria-label="영상 종류 필터">
           <button class="video-tab is-active" type="button" data-video-filter="all" aria-pressed="true">전체</button>
@@ -239,34 +244,10 @@
     </section>
   </main>
   <footer class="footer"><div class="footer-inner wrap"><a href="#top" class="footer-brand">문탕닷컴<span class="brand-dot">.</span></a><div class="footer-right"><a href="#top">맨 위로 ↑</a><a href="#videos">전체 영상</a><a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" target="_blank" rel="noopener noreferrer">유튜브 ↗</a></div></div></footer>
-  
-  <div class="video-modal" id="videoModal" hidden aria-hidden="true">
-    <div class="video-modal-backdrop" data-modal-dismiss></div>
-    <section class="video-dialog" id="videoDialog" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle" tabindex="-1">
-      <div class="video-dialog-orbits" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
-      <header class="video-dialog-header">
-        <div class="video-modal-mark">문탕닷컴<span class="brand-dot">.</span><span>PLAYER</span></div>
-        <div class="video-dialog-actions">
-          <a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" id="videoModalExternal" target="_blank" rel="noopener noreferrer">유튜브 <b>↗</b></a>
-          <button type="button" id="videoModalClose" class="video-dialog-close" aria-label="영상 창 닫기">×</button>
-        </div>
-      </header>
-      <div class="video-dialog-content">
-        <div class="video-dialog-title-row"><span class="video-live-dot"></span><h2 id="videoModalTitle">유튜브 영상</h2></div>
-        <div class="video-dialog-screen">
-          <div class="video-screen-glow" aria-hidden="true"><i></i><b></b></div>
-          <iframe id="videoModalFrame" title="유튜브 영상 플레이어" src="about:blank" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-        </div>
-      </div>
-    </section>
-  </div>
-  <div class="ldm-suggestion" id="ldmSuggestion" role="status" aria-live="polite" hidden>
-    <span class="ldm-suggestion-icon" aria-hidden="true"><i></i><i></i><i></i></span>
-    <div class="ldm-suggestion-copy"><strong>프레임 속도가 낮아요.</strong><span id="ldmSuggestionDetail">LDM을 켤까요?</span></div>
-    <button type="button" id="ldmSuggestionEnable">지금 켜기</button>
-    <button type="button" id="ldmSuggestionDismiss" aria-label="알림 닫기">나중에</button>
-  </div>
+  <span id="playerStatus" class="sr-only" role="status" aria-live="polite"></span>
+  <template id="videoBootstrap"></template>
 
-  <script src="/script.js" defer></script>
+
+  <script src="/script.js" type="module"></script>
 </body>
 </html>
