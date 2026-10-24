@@ -417,18 +417,20 @@ function retreatHero(main, small, origin, target, previousVideo, currentVideo) {
   Object.assign(main.style, {
     left: origin.left + 'px', top: origin.top + 'px', right: 'auto', bottom: 'auto',
     width: origin.width + 'px', height: origin.height + 'px', margin: '0',
-    boxSizing: 'border-box', transform: rotation, transition: 'none',
+    boxSizing: 'border-box', transformOrigin: 'center center', transform: rotation, transition: 'none',
     animation: 'none', zIndex: '12', pointerEvents: 'none',
   });
   main.classList.add('hero-return-flight');
   small.style.transition = 'opacity .24s ease';
   small.style.pointerEvents = 'none';
   void main.offsetWidth;
-  main.style.transition = 'left .82s cubic-bezier(.2,.8,.2,1),top .82s cubic-bezier(.2,.8,.2,1),width .82s cubic-bezier(.2,.8,.2,1),height .82s cubic-bezier(.2,.8,.2,1),transform .82s cubic-bezier(.2,.8,.2,1),padding .82s ease,box-shadow .82s ease';
+  main.style.transition = 'left .82s cubic-bezier(.2,.8,.2,1),top .82s cubic-bezier(.2,.8,.2,1),transform .82s cubic-bezier(.2,.8,.2,1)';
   transitionFrame = requestAnimationFrame(() => {
+    // Scale the entire card, including its text and controls, without reflowing the title.
     Object.assign(main.style, {
-      left: target.left + 'px', top: target.top + 'px', width: target.width + 'px',
-      height: target.height + 'px', transform: previewRotation, padding: '5px',
+      left: target.left - (origin.width - target.width) / 2 + 'px',
+      top: target.top - (origin.height - target.height) / 2 + 'px',
+      transform: previewRotation + ` scale(${target.width / origin.width},${target.height / origin.height})`,
     });
     small.style.opacity = '0';
   });
@@ -439,10 +441,8 @@ function retreatHero(main, small, origin, target, previousVideo, currentVideo) {
     transitionFrame = requestAnimationFrame(() => { small.style.opacity = '1'; });
   }, 320);
   scheduleHeroTransitionTimeout(() => {
-    renderHeroRole(main, currentVideo, 'small', true, true);
+    renderHeroRole(main, currentVideo, 'small', true);
     $('#peekIndex').textContent = String((carouselIndex + 1) % heroVideos.length + 1).padStart(2, '0');
-  }, 620);
-  scheduleHeroTransitionTimeout(() => {
     main.classList.remove('hero-return-flight');
     main.removeAttribute('style');
     small.removeAttribute('style');
