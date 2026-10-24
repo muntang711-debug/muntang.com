@@ -7,6 +7,33 @@ import { getCatalog, parseCatalogRequest, catalogCacheKey } from '../lib/catalog
 import { readUpstream, collectCatalog, fetchPage } from '../lib/youtube.js';
 import { parseEmbeddedJson, collectYouTubeVideos, findYouTubeContinuation } from '../lib/youtube-parser.js';
 import { mergeVideos, filterVideos, pageTypes, formatDate } from '../public/video-state.js';
+import { createSlideClock, createFpsSampler } from '../public/motion-clock.js';
+
+test('slide progress uses active time and survives pauses without duplicate clocks', () => {
+  let time = 0, callback, progress = 0, advances = 0, requests = 0;
+  const clock = createSlideClock({ now: () => time, request: fn => { callback = fn; return ++requests; }, cancel: () => { callback = null; }, progress: value => { progress = value; }, advance: () => { advances++; return true; } });
+  const step = value => { time = value; callback?.(time); };
+  clock.setRunning(true); clock.setRunning(true);
+  assert.equal(requests, 1);
+  step(3200); assert.equal(progress, .5); assert.equal(advances, 0);
+  clock.setRunning(false); step(13200); assert.equal(progress, .5);
+  clock.setRunning(true); step(16399); assert.ok(progress < 1); assert.equal(advances, 0);
+  step(16400); assert.equal(advances, 1); assert.equal(progress, 0);
+  clock.reset(); step(18000); assert.equal(progress, .25);
+});
+
+test('LDM recommendation requires sustained low FPS and resets after recovery or suspension', () => {
+  const reports = [];
+  const sampler = createFpsSampler(fps => reports.push(fps));
+  let time = 0;
+  sampler.sample(time);
+  const frames = (count, interval) => { for (let i = 0; i < count; i++) sampler.sample(time += interval); };
+  frames(50, 50); assert.equal(reports.length, 0);
+  frames(150, 1000 / 60); frames(51, 50); assert.equal(reports.length, 0);
+  frames(51, 50); assert.equal(reports.at(-1), 20);
+  sampler.reset(); reports.length = 0;
+  time += 60000; sampler.sample(time); frames(50, 50); assert.equal(reports.length, 0);
+});
 
 test('canonical host and protocol preserve path/query while language has its own URL', () => {
   for (const origin of ['http://muntang.com', 'http://www.muntang.com', 'https://www.muntang.com']) assert.equal(canonicalLocation(new URL(origin + '/en/?a=1')), 'https://muntang.com/en/?a=1');
@@ -100,6 +127,9 @@ test('built pages contain complete initial titles, distinct language metadata an
     const node = document.querySelector('#videoBootstrap'); const data = JSON.parse(node.content.textContent || node.textContent); assert.ok(data.videos.every(video => video.title));
     for (const node of document.querySelectorAll('script[src],link[rel=stylesheet]')) { const url = node.getAttribute('src') || node.getAttribute('href'); assert.match(url, /\.[a-f0-9]{12}\./); await fs.access('dist' + url); }
     assert.equal(document.querySelector('#videoModal'), null);
+    assert.equal(document.querySelector('#archiveStatus').textContent, '');
+    assert.ok(document.querySelector('#ldmSuggestion').hasAttribute('hidden'));
+    assert.equal(document.querySelector('#ldmSuggestionEnable').textContent, language === 'en' ? 'Enable now' : '지금 켜기');
     for (const id of ['heroPause', 'heroPrevious', 'heroNext', 'playerStatus', 'siteDrawer']) assert.ok(document.getElementById(id));
   }
 });

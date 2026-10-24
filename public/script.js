@@ -1,3 +1,4 @@
+import { createSlideClock, createFpsSampler } from './motion-clock.js';
 import { initScene } from './scene.js';
 import { mergeVideos, filterVideos, pageTypes, formatDate } from './video-state.js';
 
@@ -32,7 +33,8 @@ function setDrawer(open) {
   drawer.classList.toggle('is-open', open);
   backdrop.classList.toggle('is-open', open);
   window.dispatchEvent(new Event('scene-visibilitychange'));
-  if (open) trigger.focus(); else if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+  if (open) requestAnimationFrame(() => { if (drawerOpen) $('.drawer-link', drawer)?.focus({ preventScroll: true }); });
+  else if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
   syncCarousel();
 }
 trigger.addEventListener('click', () => setDrawer(!drawerOpen));
@@ -117,7 +119,7 @@ function thumbnail(image, video) {
 const grid = $('#videoGrid'), search = $('#videoSearch'), status = $('#archiveStatus'), loadButton = $('#loadMore');
 let videos = [], tokens = { videos: '', shorts: '' }, complete = { videos: false, shorts: false };
 let filter = 'all', loading = false, loadError = false, catalogStatus = 'stale', activeInlineFrame = null, activeVideoId = '';
-let heroVideos = [], carouselIndex = 0, heroTimer = 0, heroInView = true, heroHover = false, heroFocused = false, userPaused = false;
+let heroVideos = [], carouselIndex = 0, heroInView = true, heroFocused = false, userPaused = false;
 try { const node = $('#videoBootstrap'); const data = JSON.parse(node.content.textContent || node.textContent); videos = mergeVideos([], data.videos); } catch { /* The static links remain available if bootstrap fails. */ }
 
 function closePlayer({ restoreFocus = true } = {}) {
@@ -196,8 +198,8 @@ function renderVideos() {
   if (focusWasPlaying && !preserve) search.focus({ preventScroll: true });
   $('#videoCount').textContent = String(matches.length).padStart(2, '0');
   $('#videoCountSuffix').textContent = text('개 영상', 'videos');
-  const suffix = loadError ? text(' · 불러오지 못했습니다. 다시 시도해 주세요.', ' · Could not update. Please try again.') : catalogStatus === 'stale' ? text(' · 저장된 목록입니다. 최신 정보를 확인합니다.', ' · Saved list; checking for updates.') : catalogStatus === 'degraded' ? text(' · 일부 정보를 일시적으로 확인할 수 없습니다.', ' · Some details are temporarily unavailable.') : '';
-  status.textContent = (en ? `Showing ${matches.length} of ${videos.length} loaded videos` : `불러온 영상 ${videos.length}개 중 ${matches.length}개 표시`) + suffix;
+  status.textContent = loadError ? text('불러오지 못했습니다. 다시 시도해 주세요.', 'Could not update. Please try again.') : '';
+  status.parentElement.hidden = !loadError;
   const remaining = pageTypes(filter, tokens);
   const uncertain = filter === 'all' ? !complete.videos || !complete.shorts : !complete[filter];
   $('#videoLoadWrap').hidden = !remaining.length && !uncertain && !loadError;
@@ -207,52 +209,231 @@ function renderVideos() {
   $$('[data-video-filter]').forEach(button => { const active = button.dataset.videoFilter === filter; button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', String(active)); });
 }
 
+let heroTransitionBusy = false;
+const heroCards = [$('#heroVideo'), $('#heroPeek')];
+const transitionTimeouts = new Set();
+let transitionFrame = 0;
+function scheduleHeroTransitionTimeout(callback, delay) {
+  const id = setTimeout(() => { transitionTimeouts.delete(id); callback(); }, delay);
+  transitionTimeouts.add(id);
+}
+function settleHeroTransition() {
+  for (const id of transitionTimeouts) clearTimeout(id);
+  transitionTimeouts.clear(); cancelAnimationFrame(transitionFrame);
+  heroTransitionBusy = false;
+  heroCards.forEach((card, i) => { card.removeAttribute('style'); card.classList.remove('hero-handoff-flight'); card.id = i ? 'heroPeek' : 'heroVideo'; });
+  paintHero();
+}
+window.addEventListener('resize', () => { if (heroTransitionBusy) settleHeroTransition(); }, { passive: true });
+function renderHeroRole(card,video,role,suppressEntrance,stagedUI){
+  if(!card||!video)return;
+  var keepFlight=card.classList.contains('hero-handoff-flight');
+  var main=role==='main';
+  card.id=main?'heroVideo':'heroPeek';
+  card.className=main?'feature-card':'float-card';
+  if(keepFlight)card.classList.add('hero-handoff-flight');
+  if(suppressEntrance)card.classList.add('hero-card-live');
+  var retainedImage=card.querySelector('img');
+  card.removeAttribute('href');
+  card.dataset.videoId=video.id;
+  card.dataset.videoTitle=video.title||'';
+  card.dataset.videoUrl=video.url||'';
+  card.dataset.videoType=video.type||'';
+  card.setAttribute('role','button');
+  card.setAttribute('tabindex','0');
+  card.setAttribute('aria-label',(video.title||text('영상', 'Video'))+' '+text('재생', 'Play'));
+  card.textContent='';
+  var imageWrap=create('div',main?'feature-image':'float-image');
+  if(stagedUI&&!main)imageWrap.classList.add('hero-preview-enter');
+  var image=(retainedImage&&(retainedImage.getAttribute('src')===video.thumbnail_url||retainedImage.src===video.thumbnail_url))?retainedImage:document.createElement('img');
+  image.id=main?'heroThumbnail':'peekThumbnail';
+  thumbnail(image,video);
+  image.alt=(video.title||text('영상', 'Video'))+' '+text('썸네일', 'thumbnail');
+  image.decoding='async';
+  imageWrap.appendChild(image);
+  if(main){
+    var play=create('span','feature-play');
+    play.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.4c0-.8.87-1.28 1.56-.86l10.04 5.74a1.98 1.98 0 0 1 0 3.44l-10.04 5.74A1.04 1.04 0 0 1 8 18.6V5.4Z"/></svg>';
+    if(stagedUI)play.classList.add('hero-ui-enter','hero-play-enter');
+    imageWrap.appendChild(play);
+  }else{
+    imageWrap.appendChild(create('span','float-orb',''));
+  }
+  card.appendChild(imageWrap);
+  if(main){
+    var info=create('div','feature-info');
+    var title=create('div','feature-title',video.title||text('영상', 'Video'));
+    title.id='heroTitle';
+    if(stagedUI)title.classList.add('hero-ui-enter','hero-title-enter');
+    info.appendChild(title);
+    var external=create('a','feature-arrow','↗');
+    external.href=video.url||('https://www.youtube.com/watch?v='+encodeURIComponent(video.id));
+    external.target='_blank';
+    external.rel='noopener noreferrer';
+    external.dataset.externalVideo='true';
+    external.setAttribute('aria-label',text('유튜브에서 열기', 'Open on YouTube'));
+    if(stagedUI)external.classList.add('hero-ui-enter','hero-arrow-enter');
+    info.appendChild(external);
+    card.appendChild(info);
+  }else{
+    var infoSmall=create('div','float-info');
+    var smallTitle=create('span','peek-video-title',video.title||text('영상', 'Video'));
+    smallTitle.id='peekTitle';
+    var no=create('span','float-index','');
+    no.id='peekIndex';
+    infoSmall.appendChild(smallTitle);
+    infoSmall.appendChild(no);
+    if(stagedUI){infoSmall.classList.add('hero-preview-enter');smallTitle.classList.add('hero-preview-enter');no.classList.add('hero-preview-enter');}
+    card.appendChild(infoSmall);
+  }
+  if(stagedUI){
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        card.querySelectorAll('.hero-ui-enter,.hero-preview-enter').forEach(function(node){node.classList.add('is-entered');});
+      });
+    });
+  }
+}
+
 function refreshHero() {
   const currentId = heroVideos[carouselIndex]?.id;
-  heroVideos = videos.filter(video => video.type !== 'short');
+  const next = videos.filter(video => video.type !== 'short');
+  const changed = next.map(v => v.id).join(',') !== heroVideos.map(v => v.id).join(',');
+  heroVideos = next;
   if (!heroVideos.length) return;
   carouselIndex = Math.max(0, heroVideos.findIndex(video => video.id === currentId));
-  paintHero(); syncCarousel();
+  if (changed || !heroTransitionBusy) {
+    if (heroTransitionBusy) settleHeroTransition(); else paintHero();
+  }
+  preloadHeroThumbnail(heroVideos[(carouselIndex + 1) % heroVideos.length]);
+  syncCarousel();
 }
 function paintHero() {
   if (!heroVideos.length) return;
-  [$('#heroVideo'), $('#heroPeek')].forEach((card, i) => {
-    const video = heroVideos[(carouselIndex + i) % heroVideos.length];
-    card.classList.add('hero-card-live'); card.setAttribute('aria-label', video.title + ' — ' + text('재생', 'Play'));
-    thumbnail($('img', card), video);
-    $(i ? '#peekTitle' : '#heroTitle', card).textContent = video.title;
-    card.dataset.videoId = video.id;
-    if (i) $('#peekIndex').textContent = String((carouselIndex + 1) % heroVideos.length + 1).padStart(2, '0');
+  renderHeroRole($('#heroVideo'),heroVideos[carouselIndex],'main',true);
+  renderHeroRole($('#heroPeek'),heroVideos[(carouselIndex+1)%heroVideos.length],'small',true);
+  $('#heroIndex').textContent = String(carouselIndex+1).padStart(2,'0');
+  $('#heroTotal').textContent = String(heroVideos.length).padStart(2,'0');
+  $('#peekIndex').textContent = String((carouselIndex+1)%heroVideos.length+1).padStart(2,'0');
+}
+function advanceHero(direction = 1, manual = false){
+  if(heroTransitionBusy||heroVideos.length<2||document.visibilityState==='hidden')return false;
+  if(activeInlineFrame)return false;
+  var main=$('#heroVideo'),small=$('#heroPeek');
+  if(!main||!small)return false;
+  var nextIndex=(carouselIndex+direction+heroVideos.length)%heroVideos.length;
+  var nextVideo=heroVideos[nextIndex],following=heroVideos[(nextIndex+1)%heroVideos.length];
+  if(ldmEnabled || reduced){
+    carouselIndex=nextIndex;
+    paintHero();
+    slideClock.reset();
+    if(manual) $('#heroCarouselStatus').textContent=nextVideo.title;
+    return true;
+  }
+  if (direction < 0) renderHeroRole(small,nextVideo,'small',true);
+  preloadHeroThumbnail(following);
+  slideClock.reset();
+  if(manual) $('#heroCarouselStatus').textContent=nextVideo.title;
+  var origin={left:small.offsetLeft,top:small.offsetTop,width:small.offsetWidth,height:small.offsetHeight};
+  var target={left:main.offsetLeft,top:main.offsetTop,width:main.offsetWidth,height:main.offsetHeight};
+  heroTransitionBusy=true;
+  // Update the counter as soon as the next card starts moving.
+  carouselIndex=nextIndex;
+  var heroIndexNode=$('#heroIndex');
+  if(heroIndexNode)heroIndexNode.textContent=String(nextIndex+1).padStart(2,'0');
+  small.style.position='absolute';
+  small.style.left=origin.left+'px';small.style.top=origin.top+'px';
+  small.style.right='auto';small.style.bottom='auto';
+  small.style.width=origin.width+'px';small.style.height=origin.height+'px';
+  small.style.margin='0';small.style.boxSizing='border-box';
+  small.style.transformOrigin='center center';
+  small.style.transform='rotate(-9deg)';
+  small.style.transition='none';
+  small.style.animation='none';
+  small.style.zIndex='12';
+  small.style.pointerEvents='none';
+  void small.offsetWidth;
+  small.style.transition='left .82s cubic-bezier(.2,.8,.2,1),top .82s cubic-bezier(.2,.8,.2,1),width .82s cubic-bezier(.2,.8,.2,1),height .82s cubic-bezier(.2,.8,.2,1),transform .82s cubic-bezier(.2,.8,.2,1),padding .82s cubic-bezier(.2,.8,.2,1),box-shadow .82s cubic-bezier(.2,.8,.2,1)';
+  small.classList.add('hero-handoff-flight');
+  main.style.transition='opacity .62s ease,transform .82s cubic-bezier(.2,.8,.2,1)';
+  main.style.pointerEvents='none';
+  transitionFrame = requestAnimationFrame(function(){
+    small.style.left=target.left+'px';small.style.top=target.top+'px';
+    small.style.width=target.width+'px';small.style.height=target.height+'px';
+    small.style.transform='rotateY(-10deg) rotateZ(2.1deg)';
+    main.style.opacity='0';
+    main.style.transform='translate3d(-14px,8px,0) scale(.975)';
   });
-  $('#heroIndex').textContent = String(carouselIndex + 1).padStart(2, '0');
-  $('#heroTotal').textContent = String(heroVideos.length).padStart(2, '0');
+  scheduleHeroTransitionTimeout(function(){
+    var oldInfo=small.querySelector('.float-info');
+    var oldOrb=small.querySelector('.float-orb');
+    [oldInfo,oldOrb].forEach(function(node){
+      if(!node)return;
+      node.style.transition='opacity .18s ease,transform .22s ease,filter .22s ease';
+      node.style.opacity='0';
+      node.style.transform='translate3d(0,8px,0) scale(.94)';
+      node.style.filter='blur(3px)';
+    });
+  },500);
+  scheduleHeroTransitionTimeout(function(){
+    main.id='heroVideo-outgoing';
+    renderHeroRole(small,nextVideo,'main',true,true);
+  },620);
+  scheduleHeroTransitionTimeout(function(){
+    small.classList.remove('hero-handoff-flight');
+    small.removeAttribute('style');
+    main.removeAttribute('style');
+    main.id='heroPeek';
+    renderHeroRole(main,following,'small',true,true);
+    main.style.opacity='0';
+    main.style.transform='translate3d(0,13px,0) scale(.9) rotate(-5deg)';
+    main.style.transition='opacity .48s ease,transform .58s cubic-bezier(.2,.8,.2,1)';
+    transitionFrame = requestAnimationFrame(function(){
+      main.style.opacity='1';
+      main.style.transform='rotate(-9deg)';
+    });
+    var heroTotalNode=$('#heroTotal'),peekIndexNode=$('#peekIndex');
+    if(heroTotalNode)heroTotalNode.textContent=String(heroVideos.length).padStart(2,'0');
+    if(peekIndexNode)peekIndexNode.textContent=String((heroVideos.findIndex(function(item){return item.id===following.id;})+1)||1).padStart(2,'0');
+    preloadHeroThumbnail(heroVideos[(carouselIndex+2)%heroVideos.length]);
+    scheduleHeroTransitionTimeout(function(){
+      main.removeAttribute('style');
+      heroTransitionBusy=false;
+    },620);
+  },900);
+  return true;
 }
-function advanceHero(direction, manual = false) {
-  if (!heroVideos.length) return;
-  carouselIndex = (carouselIndex + direction + heroVideos.length) % heroVideos.length; paintHero();
-  if (manual) $('#heroCarouselStatus').textContent = heroVideos[carouselIndex].title;
+
+const heroPreloadedThumbnails = new Map();
+function preloadHeroThumbnail(video) {
+  if (!video || heroPreloadedThumbnails.has(video.id)) return;
+  const image = new Image(); image.decoding = 'async';
+  image.src = video.thumbnail_url;
+  heroPreloadedThumbnails.set(video.id, image);
+  image.decode?.().catch(() => {});
 }
+const slideClock = createSlideClock({
+  now: () => performance.now(), request: callback => requestAnimationFrame(callback), cancel: id => cancelAnimationFrame(id),
+  progress: fraction => { $('#heroTimerProgress').style.transform = 'scaleX(' + fraction + ')'; },
+  advance: () => advanceHero(1),
+});
 function syncCarousel() {
-  clearInterval(heroTimer); heroTimer = 0;
-  const paused = userPaused || reduced || ldmEnabled || drawerOpen || activeInlineFrame || document.hidden || !heroInView || heroHover || heroFocused;
-  $('#heroPause').textContent = reduced || ldmEnabled ? text('자동 전환 꺼짐', 'Slideshow off') : userPaused ? text('자동 전환 시작', 'Start slideshow') : text('자동 전환 정지', 'Pause slideshow');
+  const paused = userPaused || reduced || drawerOpen || activeInlineFrame || document.hidden || !heroInView || heroFocused;
+  $('#heroPause').textContent = reduced ? text('자동 전환 꺼짐', 'Slideshow off') : userPaused ? text('자동 전환 시작', 'Start slideshow') : text('자동 전환 정지', 'Pause slideshow');
   $('#heroPause').setAttribute('aria-pressed', String(userPaused));
-  $('#heroPause').disabled = reduced || ldmEnabled;
-  $('#heroTimerProgress').style.transform = paused ? 'scaleX(0)' : 'scaleX(1)';
-  if (!paused && heroVideos.length > 1) heroTimer = setInterval(() => advanceHero(1), 6400);
+  $('#heroPause').disabled = reduced;
+  slideClock.setRunning(!paused && heroVideos.length > 1);
 }
 $('#heroPrevious').addEventListener('click', () => { advanceHero(-1, true); syncCarousel(); });
 $('#heroNext').addEventListener('click', () => { advanceHero(1, true); syncCarousel(); });
 $('#heroPause').addEventListener('click', () => { userPaused = !userPaused; syncCarousel(); });
 const stage = $('#heroStage');
-stage.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse') { heroHover = true; syncCarousel(); } });
-stage.addEventListener('pointerleave', () => { heroHover = false; syncCarousel(); });
-stage.addEventListener('focusin', () => { heroFocused = true; syncCarousel(); });
-stage.addEventListener('focusout', event => { heroFocused = stage.contains(event.relatedTarget); syncCarousel(); });
+stage.addEventListener('focusin', event => { heroFocused = heroCards.includes(event.target) && event.target.matches(':focus-visible'); syncCarousel(); });
+stage.addEventListener('focusout', event => { heroFocused = heroCards.includes(event.relatedTarget) && event.relatedTarget.matches(':focus-visible'); syncCarousel(); });
 if ('IntersectionObserver' in window) new IntersectionObserver(entries => { heroInView = entries[0].isIntersecting; syncCarousel(); }).observe(stage);
 document.addEventListener('visibilitychange', syncCarousel);
 motion.addEventListener('change', () => { reduced = motion.matches; window.dispatchEvent(new Event('ldmchange')); updateScroll(); syncCarousel(); });
-window.addEventListener('ldmchange', updateScroll);
+window.addEventListener('ldmchange', () => { if (heroTransitionBusy && (ldmEnabled || reduced)) settleHeroTransition(); updateScroll(); syncFpsMonitor(); });
 [$('#heroVideo'), $('#heroPeek')].forEach(card => {
   const play = () => {
     const video = videos.find(video => video.id === card.dataset.videoId); if (!video) return;
@@ -294,7 +475,27 @@ async function loadMore(initial = false) {
 search.addEventListener('input', renderVideos);
 $$('[data-video-filter]').forEach(button => button.addEventListener('click', () => { filter = button.dataset.videoFilter; renderVideos(); }));
 loadButton.addEventListener('click', () => loadMore(false));
-window.addEventListener('pagehide', () => { fetchController?.abort(); clearTimeout(refreshTimer); clearInterval(heroTimer); });
+window.addEventListener('pagehide', () => { fetchController?.abort(); clearTimeout(refreshTimer); slideClock.setRunning(false); settleHeroTransition(); stopFpsMonitor(); });
+
+const suggestion = $('#ldmSuggestion');
+let fpsFrame = 0, fpsDismissed = false;
+const fpsSampler = createFpsSampler(fps => {
+  if (fpsDismissed || ldmEnabled || reduced || drawerOpen || activeInlineFrame) return;
+  $('#ldmSuggestionDetail').textContent = text('현재 약 ' + fps + ' FPS입니다. LDM을 켤까요?', 'Running at about ' + fps + ' FPS. Enable LDM?');
+  suggestion.hidden = false;
+});
+function stopFpsMonitor() { cancelAnimationFrame(fpsFrame); fpsFrame = 0; fpsSampler.reset(); }
+function syncFpsMonitor() {
+  stopFpsMonitor();
+  if (ldmEnabled || reduced || fpsDismissed) suggestion.hidden = true;
+  if (ldmEnabled || reduced || fpsDismissed || document.hidden) return;
+  const sample = time => { fpsSampler.sample(time); fpsFrame = requestAnimationFrame(sample); };
+  fpsFrame = requestAnimationFrame(sample);
+}
+$('#ldmSuggestionEnable').addEventListener('click', () => { suggestion.hidden = true; setLdm(true); });
+$('#ldmSuggestionDismiss').addEventListener('click', () => { fpsDismissed = true; suggestion.hidden = true; syncFpsMonitor(); });
+document.addEventListener('visibilitychange', syncFpsMonitor);
+
 setLdm(ldmEnabled);
 initScene($, () => reduced, () => ldmEnabled);
 renderVideos(); refreshHero(); updateScroll(); loadMore(true);

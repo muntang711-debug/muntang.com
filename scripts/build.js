@@ -36,6 +36,10 @@ for (const language of ['ko', 'en']) {
       const value = entry.en?.[index];
       if (value !== undefined) { if (entry.a) node.setAttribute(entry.a, value); else node.innerHTML = value; }
     });
+    document.querySelector('#ldmSuggestionTitle').textContent = 'Frame rate is low.';
+    document.querySelector('#ldmSuggestionDetail').textContent = 'Enable LDM?';
+    document.querySelector('#ldmSuggestionEnable').textContent = 'Enable now';
+    document.querySelector('#ldmSuggestionDismiss').textContent = 'Later';
     document.title = 'Muntang.com';
     for (const selector of ['meta[property="og:title"]', 'meta[name="twitter:title"]']) document.querySelector(selector).content = 'Muntang.com';
     for (const selector of ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']) document.querySelector(selector).content = 'Muntang’s videos, creation process and English subtitles. Watch videos and Shorts from the channel.';
@@ -56,7 +60,7 @@ for (const language of ['ko', 'en']) {
   document.querySelector('link[href="/styles.css"]').href = outputs.css;
   document.querySelector('script[src="/script.js"]').src = outputs.js;
   document.querySelector('#videoCount').textContent = String(data.videos.length);
-  document.querySelector('#archiveStatus').textContent = en ? 'Saved video list · checking for updates' : '저장된 영상 목록 · 최신 정보 확인 중';
+
   document.querySelector('#videoBootstrap').innerHTML = escape(JSON.stringify(data));
   document.querySelector('#videoGrid').innerHTML = data.videos.map((video, index) => `<article class="video-card is-visible"><a href="${escape(video.url)}" target="_blank" rel="noopener noreferrer"><div class="video-frame"><img src="${escape(video.thumbnail_url)}" alt="${escape(video.title)}" width="480" height="360" loading="lazy"><span class="video-index">${index + 1}</span></div><div class="video-card-text"><span class="video-card-title">${escape(video.title)}</span><span class="video-card-arrow" aria-hidden="true">↗</span></div></a></article>`).join('');
   const featured = data.featured?.[0] || data.videos.find(v => v.type !== 'short');

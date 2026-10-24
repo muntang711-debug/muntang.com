@@ -221,7 +221,7 @@
           <div class="archive-count"><strong id="videoCount">—</strong><span id="videoCountSuffix">개 영상</span></div>
         </div>
         <div class="archive-tools" data-reveal>
-          <span class="archive-filter"><i></i><span id="archiveStatus" role="status" aria-live="polite" aria-atomic="true">저장된 영상 목록</span></span>
+          <span class="archive-filter" hidden><span id="archiveStatus" role="status" aria-live="polite" aria-atomic="true"></span></span>
           <label class="video-search"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="videoSearch" type="search" placeholder="불러온 영상에서 검색" autocomplete="off" aria-label="불러온 영상에서 검색"></label>
         </div>
         <div class="video-tabs" role="group" aria-label="영상 종류 필터">
@@ -244,6 +244,7 @@
     </section>
   </main>
   <footer class="footer"><div class="footer-inner wrap"><a href="#top" class="footer-brand">문탕닷컴<span class="brand-dot">.</span></a><div class="footer-right"><a href="#top">맨 위로 ↑</a><a href="#videos">전체 영상</a><a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" target="_blank" rel="noopener noreferrer">유튜브 ↗</a></div></div></footer>
+  <div class="ldm-suggestion" id="ldmSuggestion" role="status" aria-live="polite" hidden><div class="ldm-suggestion-copy"><strong id="ldmSuggestionTitle">프레임 속도가 낮아요.</strong><span id="ldmSuggestionDetail">LDM을 켤까요?</span></div><button type="button" id="ldmSuggestionEnable">지금 켜기</button><button type="button" id="ldmSuggestionDismiss">나중에</button></div>
   <span id="playerStatus" class="sr-only" role="status" aria-live="polite"></span>
   <template id="videoBootstrap"></template>
 
