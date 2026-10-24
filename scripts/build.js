@@ -14,13 +14,14 @@ await fs.mkdir(path.join(dist, 'assets'), { recursive: true });
 await fs.cp(path.join(root, 'public'), dist, { recursive: true, filter: source => !/\.(?:js|css)$/.test(source) && path.basename(source) !== 'index.html' });
 
 const outputs = {};
-for (const [name, entry] of Object.entries({ app: 'script.js', style: 'styles.css' })) {
+for (const [name, entry] of Object.entries({ app: 'script.js', style: 'styles.css', language: 'language.js' })) {
   const result = await build({ entryPoints: [path.join(root, 'public', entry)], bundle: true, minify: true, target: 'es2022', write: false, legalComments: 'inline', format: 'iife' });
   const content = result.outputFiles[0].contents;
   const ext = entry.endsWith('.css') ? 'css' : 'js';
   const hash = createHash('sha256').update(content).digest('hex').slice(0, 12);
-  outputs[ext] = `/assets/${name}.${hash}.${ext}`;
-  await fs.writeFile(path.join(dist, outputs[ext]), content);
+  const key = name === 'language' ? 'language' : ext;
+  outputs[key] = `/assets/${name}.${hash}.${ext}`;
+  await fs.writeFile(path.join(dist, outputs[key]), content);
 }
 
 const escape = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -62,6 +63,7 @@ for (const language of ['ko', 'en']) {
   document.querySelector('meta[property="og:url"]').content = url;
   document.querySelector('link[href="/styles.css"]').href = outputs.css;
   document.querySelector('script[src="/script.js"]').src = outputs.js;
+  document.querySelector('script[src="/language.js"]').src = outputs.language;
   document.querySelector('#videoCount').textContent = String(data.videos.length);
   document.querySelector('#archiveStatus').textContent = '';
 
