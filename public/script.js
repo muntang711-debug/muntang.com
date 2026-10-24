@@ -221,7 +221,7 @@ function settleHeroTransition() {
   for (const id of transitionTimeouts) clearTimeout(id);
   transitionTimeouts.clear(); cancelAnimationFrame(transitionFrame);
   heroTransitionBusy = false;
-  heroCards.forEach((card, i) => { card.removeAttribute('style'); card.classList.remove('hero-handoff-flight', 'hero-return-flight'); card.id = i ? 'heroPeek' : 'heroVideo'; });
+  heroCards.forEach((card, i) => { card.removeAttribute('style'); card.classList.remove('hero-handoff-flight', 'hero-return-flight', 'hero-role-settle'); card.id = i ? 'heroPeek' : 'heroVideo'; });
   paintHero();
 }
 window.addEventListener('resize', () => { if (heroTransitionBusy) settleHeroTransition(); }, { passive: true });
@@ -441,10 +441,25 @@ function retreatHero(main, small, origin, target, previousVideo, currentVideo) {
     transitionFrame = requestAnimationFrame(() => { small.style.opacity = '1'; });
   }, 320);
   scheduleHeroTransitionTimeout(() => {
-    renderHeroRole(main, currentVideo, 'small', true);
-    $('#peekIndex').textContent = String((carouselIndex + 1) % heroVideos.length + 1).padStart(2, '0');
-    main.classList.remove('hero-return-flight');
+    // Change only the inner UI; keep the card, thumbnail wrapper and image attached.
+    main.id = 'heroPeek';
+    main.className = 'float-card hero-card-live hero-role-settle';
+    const image = $('img', main), imageWrap = image.parentElement;
+    image.id = 'peekThumbnail';
+    imageWrap.className = 'float-image';
+    $('.feature-play', imageWrap)?.remove();
+    imageWrap.appendChild(create('span', 'float-orb'));
+    const info = $('.feature-info', main);
+    info.className = 'float-info';
+    const title = create('span', 'peek-video-title', currentVideo.title);
+    title.id = 'peekTitle';
+    const index = create('span', 'float-index', String((carouselIndex + 1) % heroVideos.length + 1).padStart(2, '0'));
+    index.id = 'peekIndex';
+    info.replaceChildren(title, index);
     main.removeAttribute('style');
+    // Commit the new layout with transitions disabled before restoring hover effects.
+    void main.offsetWidth;
+    transitionFrame = requestAnimationFrame(() => { main.classList.remove('hero-role-settle'); });
     small.removeAttribute('style');
     heroTransitionBusy = false;
   }, 900);
