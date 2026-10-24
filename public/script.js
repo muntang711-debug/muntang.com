@@ -221,17 +221,19 @@ function settleHeroTransition() {
   for (const id of transitionTimeouts) clearTimeout(id);
   transitionTimeouts.clear(); cancelAnimationFrame(transitionFrame);
   heroTransitionBusy = false;
-  heroCards.forEach((card, i) => { card.removeAttribute('style'); card.classList.remove('hero-handoff-flight'); card.id = i ? 'heroPeek' : 'heroVideo'; });
+  heroCards.forEach((card, i) => { card.removeAttribute('style'); card.classList.remove('hero-handoff-flight', 'hero-return-flight'); card.id = i ? 'heroPeek' : 'heroVideo'; });
   paintHero();
 }
 window.addEventListener('resize', () => { if (heroTransitionBusy) settleHeroTransition(); }, { passive: true });
 function renderHeroRole(card,video,role,suppressEntrance,stagedUI){
   if(!card||!video)return;
   var keepFlight=card.classList.contains('hero-handoff-flight');
+  var keepReturn=card.classList.contains('hero-return-flight');
   var main=role==='main';
   card.id=main?'heroVideo':'heroPeek';
   card.className=main?'feature-card':'float-card';
   if(keepFlight)card.classList.add('hero-handoff-flight');
+  if(keepReturn)card.classList.add('hero-return-flight');
   if(suppressEntrance)card.classList.add('hero-card-live');
   var retainedImage=card.querySelector('img');
   card.removeAttribute('href');
@@ -330,8 +332,8 @@ function advanceHero(direction = 1, manual = false){
     if(manual) $('#heroCarouselStatus').textContent=nextVideo.title;
     return true;
   }
-  if (direction < 0) renderHeroRole(small,nextVideo,'small',true);
   preloadHeroThumbnail(following);
+  preloadHeroThumbnail(nextVideo);
   slideClock.reset();
   if(manual) $('#heroCarouselStatus').textContent=nextVideo.title;
   var origin={left:small.offsetLeft,top:small.offsetTop,width:small.offsetWidth,height:small.offsetHeight};
@@ -341,6 +343,10 @@ function advanceHero(direction = 1, manual = false){
   carouselIndex=nextIndex;
   var heroIndexNode=$('#heroIndex');
   if(heroIndexNode)heroIndexNode.textContent=String(nextIndex+1).padStart(2,'0');
+  if (direction < 0) {
+    retreatHero(main, small, target, origin, nextVideo, following);
+    return true;
+  }
   small.style.position='absolute';
   small.style.left=origin.left+'px';small.style.top=origin.top+'px';
   small.style.right='auto';small.style.bottom='auto';
@@ -402,6 +408,46 @@ function advanceHero(direction = 1, manual = false){
     },620);
   },900);
   return true;
+}
+
+function retreatHero(main, small, origin, target, previousVideo, currentVideo) {
+  // Keep the current image on the same node as it travels back to the preview slot.
+  const rotation = getComputedStyle(main).transform;
+  const previewRotation = getComputedStyle(small).transform;
+  Object.assign(main.style, {
+    left: origin.left + 'px', top: origin.top + 'px', right: 'auto', bottom: 'auto',
+    width: origin.width + 'px', height: origin.height + 'px', margin: '0',
+    boxSizing: 'border-box', transform: rotation, transition: 'none',
+    animation: 'none', zIndex: '12', pointerEvents: 'none',
+  });
+  main.classList.add('hero-return-flight');
+  small.style.transition = 'opacity .24s ease';
+  small.style.pointerEvents = 'none';
+  void main.offsetWidth;
+  main.style.transition = 'left .82s cubic-bezier(.2,.8,.2,1),top .82s cubic-bezier(.2,.8,.2,1),width .82s cubic-bezier(.2,.8,.2,1),height .82s cubic-bezier(.2,.8,.2,1),transform .82s cubic-bezier(.2,.8,.2,1),padding .82s ease,box-shadow .82s ease';
+  transitionFrame = requestAnimationFrame(() => {
+    Object.assign(main.style, {
+      left: target.left + 'px', top: target.top + 'px', width: target.width + 'px',
+      height: target.height + 'px', transform: previewRotation, padding: '5px',
+    });
+    small.style.opacity = '0';
+  });
+  scheduleHeroTransitionTimeout(() => {
+    main.id = 'heroVideo-outgoing';
+    renderHeroRole(small, previousVideo, 'main', true, true);
+    small.style.transition = 'opacity .48s ease';
+    transitionFrame = requestAnimationFrame(() => { small.style.opacity = '1'; });
+  }, 320);
+  scheduleHeroTransitionTimeout(() => {
+    renderHeroRole(main, currentVideo, 'small', true, true);
+    $('#peekIndex').textContent = String((carouselIndex + 1) % heroVideos.length + 1).padStart(2, '0');
+  }, 620);
+  scheduleHeroTransitionTimeout(() => {
+    main.classList.remove('hero-return-flight');
+    main.removeAttribute('style');
+    small.removeAttribute('style');
+    heroTransitionBusy = false;
+  }, 900);
 }
 
 const heroPreloadedThumbnails = new Map();
