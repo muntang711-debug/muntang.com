@@ -1,6 +1,7 @@
 (() => {
   const key = 'muntang-language';
-  const routes = { ko: '/', en: '/en/' };
+  const mll = ['/mll', '/en/mll'].includes(location.pathname);
+  const routes = mll ? { ko: '/mll', en: '/en/mll' } : { ko: '/', en: '/en/' };
   if (!Object.values(routes).includes(location.pathname)) return;
   let saved;
   try { saved = localStorage.getItem(key); } catch { /* Storage is optional. */ }

@@ -20,6 +20,7 @@ export function canonicalLocation(url) {
   if (url.pathname === '/index.html') return url.origin + '/' + url.search;
   if (url.pathname === '/en' || url.pathname === '/en/index.html') return url.origin + '/en/' + url.search;
   if (['/mll/', '/mll/index.html', '/mll.html'].includes(url.pathname)) return url.origin + '/mll' + url.search;
+  if (['/en/mll/', '/en/mll/index.html', '/en/mll.html'].includes(url.pathname)) return url.origin + '/en/mll' + url.search;
   return null;
 }
 
@@ -41,7 +42,8 @@ export default {
     try {
       if (url.pathname === '/api/mll') {
         const data = request.method === 'HEAD' ? null : await getDemonlist(env);
-        return withHeaders(Response.json(data), request, { 'Cache-Control': 'no-store' });
+        const status = data?.ok === false ? 503 : 200;
+        return withHeaders(Response.json(data, { status }), request, { 'Cache-Control': 'no-store', ...(status === 503 ? { 'Retry-After': '30' } : {}) });
       }
       if (url.pathname === '/api/youtube') {
         const params = parseCatalogRequest(url);
@@ -56,7 +58,8 @@ export default {
         return withHeaders(new Response(xml), request, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
       }
       if (!env?.ASSETS) return withHeaders(new Response('Not Found', { status: 404 }), request);
-      const assetRequest = url.pathname === '/mll' ? new Request(new URL('/mll/', url), request) : request;
+      const isMll = ['/mll', '/en/mll'].includes(url.pathname);
+      const assetRequest = isMll ? new Request(new URL(url.pathname + '/', url), request) : request;
       let response = await env.ASSETS.fetch(assetRequest);
       if (response.status === 404) {
         const page = await env.ASSETS.fetch(new Request(new URL('/404', url), request));
@@ -65,7 +68,7 @@ export default {
       const immutable = /^\/assets\/[a-z0-9.-]+\.[a-f0-9]{12}\.(?:js|css)$/.test(url.pathname);
       return withHeaders(response, request, {
         'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate',
-        ...((['/', '/en/', '/mll'].includes(url.pathname)) ? { 'Content-Language': url.pathname === '/en/' ? 'en' : 'ko' } : {}),
+        ...((['/', '/en/', '/mll', '/en/mll'].includes(url.pathname)) ? { 'Content-Language': url.pathname.startsWith('/en/') ? 'en' : 'ko' } : {}),
         ...(url.hostname.endsWith('.workers.dev') ? { 'X-Robots-Tag': 'noindex' } : {}),
       });
     } catch (error) {

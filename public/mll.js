@@ -1,79 +1,70 @@
 import { filterDemons, renderRows, renderDetail } from './mll-view.js';
+import { initMllShell } from './mll-shell.js';
 
 const $ = selector => document.querySelector(selector);
-const bootstrap = $('#mllBootstrap');
-let snapshot = JSON.parse(bootstrap.content.textContent || bootstrap.textContent);
-let selectedId = snapshot.demons[0]?.id;
-let range = 'all', loading = false, lastRequestAt = 0;
+const language = document.documentElement.lang === 'en' ? 'en' : 'ko', en = language === 'en';
+const text = (ko, english) => en ? english : ko;
+const shell = initMllShell(language);
+let snapshot = { demons: [] }, selectedId, loading = false, lastRequestAt = 0, detailKey = '';
 const rows = $('#demonRows'), detail = $('#levelDetail'), search = $('#levelSearch');
-const filters = [...document.querySelectorAll('[data-range]')];
 
-function render() {
-  const demons = filterDemons(snapshot.demons, search.value, range);
+function render(entering = false) {
+  const demons = filterDemons(snapshot.demons, search.value);
   if (!demons.some(demon => demon.id === selectedId)) selectedId = demons[0]?.id;
   const focusedId = document.activeElement?.dataset.levelId;
-  rows.innerHTML = renderRows(demons, selectedId);
+  rows.innerHTML = renderRows(demons, selectedId, search.value, language);
+  rows.classList.toggle('is-entering', entering && shell.motionEnabled());
   if (focusedId) rows.querySelector(`[data-level-id="${Number(focusedId)}"]`)?.focus({ preventScroll: true });
-  detail.innerHTML = renderDetail(demons.find(demon => demon.id === selectedId));
-  $('#noResults').hidden = demons.length > 0;
-  $('#resultCount').textContent = `${demons.length}개 레벨${demons.length !== 150 ? ' / 전체 150개' : ''}`;
-  rows.setAttribute('aria-label', range === 'all' ? '1위부터 150위까지' : range + '위');
+  const selected = demons.find(demon => demon.id === selectedId);
+  const key = JSON.stringify(selected || null);
+  if (key !== detailKey) {
+    detail.innerHTML = renderDetail(selected, language);
+    detailKey = key;
+    detail.classList.remove('is-changing');
+    if (shell.motionEnabled()) { void detail.offsetWidth; detail.classList.add('is-changing'); }
+  }
+  detail.hidden = !selected;
+  $('#emptyState').hidden = demons.length > 0;
+  $('#emptyState').textContent = text('검색 결과가 없습니다. 다른 검색어를 입력해 주세요.', 'No matching levels. Try another search.');
+  $('#resultCount').textContent = en ? `${demons.length} levels${search.value.trim() ? ' / 150' : ''}` : `${demons.length}개 레벨${search.value.trim() ? ' / 150' : ''}`;
+  shell.progress();
 }
-
-search.addEventListener('input', render);
-for (const button of filters) button.addEventListener('click', () => {
-  range = button.dataset.range;
-  for (const filter of filters) filter.setAttribute('aria-pressed', String(filter === button));
-  render();
-});
+search.addEventListener('input', () => render());
 rows.addEventListener('click', event => {
-  const link = event.target.closest('[data-level-id]');
-  if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-  event.preventDefault();
-  selectedId = Number(link.dataset.levelId);
+  const button = event.target.closest('[data-level-id]');
+  if (!button) return;
+  selectedId = Number(button.dataset.levelId);
   render();
-  if (matchMedia('(max-width: 700px)').matches) detail.scrollIntoView({ block: 'start' });
+  if (matchMedia('(max-width: 760px)').matches) detail.scrollIntoView({ block: 'start', behavior: shell.motionEnabled() ? 'smooth' : 'instant' });
 });
-
-function showStatus(data, failed = false) {
-  const fresh = !failed && data.status === 'fresh';
-  const date = new Date(data.checkedAt);
-  const time = Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }).format(date) : '';
-  $('#syncStatus').textContent = fresh ? `최근 확인 ${time}` : `${failed ? '최신 목록 확인 실패' : '저장된 목록 표시 중'}${time ? ' · 마지막 확인 ' + time : ''}`;
-  $('.sync-line').classList.toggle('is-stale', !fresh);
-  $('#retrySync').hidden = fresh;
+function notice(message = '', retry = false) {
+  $('.list-notice').hidden = !message;
+  $('#listNotice').textContent = message;
+  $('#retrySync').hidden = !retry;
 }
-
 async function refresh() {
   if (loading) return;
-  loading = true;
-  lastRequestAt = Date.now();
+  loading = true; lastRequestAt = Date.now();
   $('#retrySync').disabled = true;
+  rows.setAttribute('aria-busy', 'true');
   try {
-    const response = await fetch('/api/mll', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    const response = await fetch('/api/mll', { cache: 'no-store', signal: AbortSignal.timeout(20000) });
     if (!response.ok) throw new Error('ListUnavailable');
     const data = await response.json();
     if (!data.ok || data.demons?.length !== 150) throw new Error('InvalidList');
+    const first = !snapshot.demons.length;
     const changed = JSON.stringify(data.demons) !== JSON.stringify(snapshot.demons);
     snapshot = data;
-    if (changed) render();
-    showStatus(data);
-  } catch { showStatus(snapshot, true); }
-  finally { loading = false; $('#retrySync').disabled = false; }
+    if (changed) render(first);
+    notice(data.status === 'stale' ? text('최근 갱신이 지연되어 마지막으로 확인한 순위를 표시합니다.', 'Updates are delayed. Showing the last verified list.') : '');
+  } catch {
+    notice(snapshot.demons.length ? text('갱신에 실패했습니다. 마지막으로 확인한 순위를 표시합니다.', 'Refresh failed. Showing the last verified list.') : text('데몬리스트를 불러오지 못했습니다.', 'Could not load the demonlist.'), true);
+    if (!snapshot.demons.length) { $('#emptyState').textContent = ''; $('#resultCount').textContent = ''; }
+  } finally {
+    loading = false; $('#retrySync').disabled = false; rows.setAttribute('aria-busy', 'false');
+  }
 }
 $('#retrySync').addEventListener('click', refresh);
 setInterval(() => { if (!document.hidden) void refresh(); }, 300000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastRequestAt >= 300000) void refresh(); });
 void refresh();
-
-const menu = $('#mllMenu'), menuOpen = $('#mllMenuOpen');
-menuOpen.addEventListener('click', () => { menu.showModal(); menuOpen.setAttribute('aria-expanded', 'true'); });
-$('#mllMenuClose').addEventListener('click', () => menu.close());
-menu.addEventListener('close', () => { menuOpen.setAttribute('aria-expanded', 'false'); menuOpen.focus(); });
-menu.addEventListener('click', event => {
-  if (event.target.closest('a')) menu.close();
-  if (event.target === menu) {
-    const bounds = menu.getBoundingClientRect();
-    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) menu.close();
-  }
-});

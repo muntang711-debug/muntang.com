@@ -21,6 +21,8 @@ function visit(pathname, saved, blocked = false) {
 test('saved language selects the matching home without loops and preserves query/hash', () => {
   assert.deepEqual(visit('/', 'en').redirects, ['/en/?ref=test#videos']);
   assert.deepEqual(visit('/en/', 'ko').redirects, ['/?ref=test#videos']);
+  assert.deepEqual(visit('/mll', 'en').redirects, ['/en/mll?ref=test#videos']);
+  assert.deepEqual(visit('/en/mll', 'ko').redirects, ['/mll?ref=test#videos']);
   for (const [path, saved] of [['/', null], ['/', 'ko'], ['/en/', 'en'], ['/', 'invalid'], ['/tools/', 'en']]) assert.deepEqual(visit(path, saved).redirects, []);
 });
 

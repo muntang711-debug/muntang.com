@@ -3,53 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script src="/language.js"></script>
   <meta name="theme-color" content="#090909">
-  <meta name="description" content="Muntang Level List. Pointercrate 지오메트리 대쉬 데몬리스트 1~150위 순위와 레벨 정보를 확인하세요.">
+  <meta name="description" content="Muntang Level List. Pointercrate 데몬리스트 1~150위와 베리파이 영상을 확인하세요.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="MLL · Muntang Level List">
   <meta property="og:description" content="Pointercrate 데몬리스트 1~150위">
   <meta property="og:url" content="https://muntang.com/mll">
   <meta property="og:image" content="https://muntang.com/og-image.png">
   <link rel="canonical" href="https://muntang.com/mll">
+  <link rel="alternate" hreflang="ko" href="https://muntang.com/mll">
+  <link rel="alternate" hreflang="en" href="https://muntang.com/en/mll">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/mll.css">
   <title>MLL · Muntang Level List</title>
   <script src="/mll.js" defer></script>
 </head>
-<body>
+<body class="mll-page">
   <a class="skip-link" href="#ranking">순위 목록으로 건너뛰기</a>
-  <header class="mll-header">
-    <nav class="mll-wrap mll-nav" aria-label="주요 메뉴">
-      <a class="mll-brand" href="/" aria-label="문탕닷컴 홈">문탕닷컴<span>.</span></a>
-      <div class="mll-nav-right"><a href="/mll" aria-current="page">MLL</a><button id="mllMenuOpen" type="button" aria-label="메뉴 열기" aria-haspopup="dialog" aria-controls="mllMenu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 6h16M9 12h11M4 18h16"/></svg></button></div>
-    </nav>
-  </header>
-  <dialog id="mllMenu" aria-labelledby="mllMenuTitle">
-    <div class="menu-head"><h2 id="mllMenuTitle">메뉴<span>.</span></h2><button id="mllMenuClose" type="button" aria-label="메뉴 닫기">닫기 ×</button></div>
-    <nav aria-label="사이트 메뉴"><a href="/">홈 <span>↗</span></a><a href="/#showreel">제작 과정 <span>↗</span></a><a href="/#global">다국어 자막 <span>↗</span></a><a href="/#videos">전체 영상 <span>↗</span></a><a href="/mll" aria-current="page">MLL <span>↗</span></a></nav>
-  </dialog>
-  <main class="mll-wrap">
+  <div id="siteShell"></div>
+  <main class="wrap mll-main" id="top">
     <section class="mll-intro" aria-labelledby="mllTitle">
-      <p class="mll-breadcrumb"><a href="/">문탕닷컴</a><span aria-hidden="true">/</span>Geometry Dash</p>
-      <div class="mll-title-line"><h1 id="mllTitle">MLL<span>.</span></h1><p>Muntang<br>Level List</p></div>
-      <div class="mll-description"><p>Pointercrate 데몬리스트 <strong>1–150위</strong></p><a href="https://pointercrate.com/demonlist/" target="_blank" rel="noopener noreferrer">원본 리스트 <span aria-hidden="true">↗</span></a></div>
+      <div class="mll-title-line"><h1 id="mllTitle">MLL<span class="brand-dot">.</span></h1><p>Muntang Level List</p></div>
+      <div class="mll-description"><p id="listDescription">Pointercrate 데몬리스트 1–150위</p><a class="original-list" href="https://pointercrate.com/demonlist/" target="_blank" rel="noopener noreferrer"><span id="originalListText">원본 리스트</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 17 17 7M6 7h11v11"/></svg></a></div>
     </section>
-    <div class="sync-line"><p id="syncStatus" role="status">저장된 목록 · 최신 순위 확인 중</p><button id="retrySync" type="button" hidden>다시 확인</button><span>5분마다 동기화</span></div>
     <section class="ranking-section" id="ranking" aria-label="데몬리스트 순위">
       <div class="list-column">
-        <div class="list-tools"><div class="rank-filters" role="group" aria-label="순위 범위"><button type="button" data-range="all" aria-pressed="true">전체 <span>150</span></button><button type="button" data-range="1-75" aria-pressed="false">1–75</button><button type="button" data-range="76-150" aria-pressed="false">76–150</button></div><label class="level-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><span class="sr-only">레벨명, 업로더, 베리파이어 또는 ID 검색</span><input id="levelSearch" type="search" placeholder="레벨 검색" autocomplete="off" maxlength="120"></label></div>
-        <div class="list-labels" aria-hidden="true"><span>순위</span><span>레벨 / 업로더</span><span>베리파이어</span></div>
-        <ol id="demonRows" class="level-list" aria-label="1위부터 150위까지"></ol>
-        <p id="noResults" class="no-results" hidden>검색 결과가 없습니다. 다른 검색어를 입력해 주세요.</p>
-        <p id="resultCount" class="result-count" role="status">150개 레벨</p>
+        <div class="list-tools"><p id="resultCount" role="status">불러오는 중…</p><label class="level-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><span id="searchLabel" class="sr-only">레벨명, 업로더, 베리파이어 또는 ID 검색</span><input id="levelSearch" type="search" placeholder="레벨 검색" autocomplete="off" maxlength="120"></label></div>
+        <div class="list-notice" hidden><p id="listNotice" role="status"></p><button id="retrySync" type="button">다시 시도</button></div>
+        <div class="list-labels" aria-hidden="true"><span id="rankLabel">순위</span><span id="levelLabel">레벨 / 업로더</span><span id="verifierLabel">베리파이어</span></div>
+        <ol id="demonRows" class="level-list" aria-label="1위부터 150위까지" aria-busy="true"></ol>
+        <p id="emptyState" class="empty-state" role="status">데몬리스트를 불러오고 있습니다.</p>
       </div>
-      <aside id="levelDetail" class="level-detail" aria-label="선택한 레벨 정보"></aside>
+      <aside id="levelDetail" class="level-detail" aria-label="선택한 레벨 정보" hidden></aside>
     </section>
-    <noscript><p class="noscript-note">저장된 순위입니다. 최신 순위 조회와 검색은 JavaScript를 켜면 사용할 수 있습니다. 레벨을 누르면 Pointercrate 원본을 확인할 수 있습니다.</p></noscript>
-    <template id="mllBootstrap"></template>
+    <noscript><p id="noScriptText">최신 데몬리스트를 불러오려면 JavaScript를 켜 주세요. <a href="https://pointercrate.com/demonlist/">Pointercrate에서 보기 ↗</a></p></noscript>
   </main>
-  <footer class="mll-wrap mll-footer"><a href="/">문탕닷컴<span>.</span></a><p>순위 데이터 제공: <a href="https://pointercrate.com/" target="_blank" rel="noopener noreferrer">Pointercrate</a></p><a href="#ranking">순위 맨 위로 ↑</a></footer>
+  <footer class="footer"><div class="footer-inner wrap"><a class="footer-brand" href="/mll">MLL<span>.</span></a><div class="footer-right"><a id="mainSiteLink" href="/">문탕닷컴 ↗</a><a id="dataCredit" href="https://pointercrate.com/" target="_blank" rel="noopener noreferrer">순위 데이터: Pointercrate ↗</a></div></div></footer>
 </body>
 </html>

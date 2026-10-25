@@ -1,24 +1,55 @@
 export const escapeHtml = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+export const labels = language => language === 'en' ? {
+  publisher: 'Publisher', verifier: 'Verifier', levelId: 'Level ID', requirement: 'List requirement', source: 'View on Pointercrate',
+  select: 'Show level', external: 'Open on Pointercrate', unavailable: 'No verification video available.', unpublished: 'Not published', empty: 'No matching levels.', video: 'Verification video',
+} : {
+  publisher: '업로더', verifier: '베리파이어', levelId: '레벨 ID', requirement: '리스트 최소 기록', source: 'Pointercrate에서 보기',
+  select: '레벨 정보 보기', external: 'Pointercrate에서 열기', unavailable: '등록된 베리파이 영상이 없습니다.', unpublished: '미공개', empty: '검색 결과가 없습니다.', video: '베리파이 영상',
+};
 
-export function filterDemons(demons, query, range = 'all') {
-  const search = query.trim().toLocaleLowerCase();
-  return demons.filter(demon => {
-    if (range === '1-75' && demon.position > 75) return false;
-    if (range === '76-150' && demon.position < 76) return false;
-    return !search || [demon.name, demon.publisher.name, demon.verifier.name, demon.level_id, '#' + demon.position]
-      .some(value => String(value ?? '').toLocaleLowerCase().includes(search));
-  });
+export function highlight(value, query = '') {
+  const text = String(value ?? ''), needle = query.trim().toLowerCase();
+  if (!needle) return escapeHtml(text);
+  const lower = text.toLowerCase();
+  let start = 0, result = '', index;
+  while ((index = lower.indexOf(needle, start)) !== -1) {
+    result += escapeHtml(text.slice(start, index)) + '<mark>' + escapeHtml(text.slice(index, index + needle.length)) + '</mark>';
+    start = index + needle.length;
+  }
+  return result + escapeHtml(text.slice(start));
 }
 
-export function renderRows(demons, selectedId) {
-  return demons.map(demon => `<li class="level-row${demon.id === selectedId ? ' is-selected' : ''}"><a class="level-select" href="https://pointercrate.com/demonlist/${demon.id}/" data-level-id="${demon.id}"${demon.id === selectedId ? ' aria-current="true"' : ''}><span class="level-rank">#${demon.position}</span><span class="level-copy"><strong>${escapeHtml(demon.name)}</strong><small>${escapeHtml(demon.publisher.name)}</small></span><span class="level-verifier">${escapeHtml(demon.verifier.name)}</span><span class="level-arrow" aria-hidden="true">↗</span></a></li>`).join('');
+export const pointercrateUrl = demon => `https://pointercrate.com/demonlist/${demon.position}/`;
+export function youtubeId(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || !['youtube.com', 'www.youtube.com', 'youtu.be'].includes(url.hostname)) return null;
+    const id = url.hostname === 'youtu.be' ? url.pathname.slice(1) : url.pathname.startsWith('/embed/') ? url.pathname.split('/')[2] : url.searchParams.get('v');
+    return /^[\w-]{11}$/.test(id || '') ? id : null;
+  } catch { return null; }
 }
 
-export function renderDetail(demon) {
-  if (!demon) return '<p class="detail-empty">검색 결과가 없습니다.</p>';
-  return `<div class="detail-heading"><span class="detail-rank">#${demon.position}</span><span>POINTERCRATE DEMONLIST</span></div>
-    <h2 id="detailTitle">${escapeHtml(demon.name)}</h2>
-    ${demon.thumbnail ? `<div class="detail-image"><img src="${escapeHtml(demon.thumbnail)}" alt="${escapeHtml(demon.name)} 영상 썸네일" width="480" height="270" loading="lazy"></div>` : '<div class="detail-image image-empty">미리보기 없음</div>'}
-    <dl class="detail-facts"><div><dt>업로더</dt><dd>${escapeHtml(demon.publisher.name)}</dd></div><div><dt>베리파이어</dt><dd>${escapeHtml(demon.verifier.name)}</dd></div><div><dt>레벨 ID</dt><dd class="level-id">${demon.level_id ?? '미공개'}</dd></div><div><dt>리스트 최소 기록</dt><dd>${demon.requirement}%</dd></div></dl>
-    <div class="detail-actions">${demon.video ? `<a class="watch-link" href="${escapeHtml(demon.video)}" target="_blank" rel="noopener noreferrer">클리어 영상 <span aria-hidden="true">↗</span></a>` : ''}<a class="source-link" href="https://pointercrate.com/demonlist/${demon.id}/" target="_blank" rel="noopener noreferrer">Pointercrate에서 보기 <span aria-hidden="true">↗</span></a></div>`;
+export function filterDemons(demons, query = '') {
+  const search = query.trim().toLowerCase();
+  return demons.filter(demon => !search || [demon.name, demon.publisher.name, demon.verifier.name, demon.level_id, '#' + demon.position]
+    .some(value => String(value ?? '').toLowerCase().includes(search)));
+}
+
+export function renderRows(demons, selectedId, query = '', language = 'ko') {
+  const t = labels(language), needle = query.trim().toLowerCase();
+  return demons.map((demon, index) => {
+    const idMatch = needle && String(demon.level_id ?? '').includes(needle);
+    return `<li class="level-row${demon.id === selectedId ? ' is-selected' : ''}" style="--row-delay:${Math.min(index, 9) * 24}ms">
+      <button class="level-select" type="button" data-level-id="${demon.id}" aria-pressed="${demon.id === selectedId}" aria-label="${escapeHtml(t.select + ': ' + demon.name)}"><span class="level-rank">${highlight('#' + demon.position, query)}</span><span class="level-copy"><strong>${highlight(demon.name, query)}</strong><span class="level-publisher">${highlight(demon.publisher.name, query)}${idMatch ? `<span class="level-match">ID ${highlight(demon.level_id, query)}</span>` : ''}</span></span><span class="level-verifier">${highlight(demon.verifier.name, query)}</span></button>
+      <a class="level-external" href="${pointercrateUrl(demon)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(t.external + ': #' + demon.position + ' ' + demon.name)}" title="${escapeHtml(t.external)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 17 17 7M6 7h11v11"/></svg></a></li>`;
+  }).join('');
+}
+
+export function renderDetail(demon, language = 'ko') {
+  const t = labels(language);
+  if (!demon) return `<p class="detail-empty">${t.empty}</p>`;
+  const id = youtubeId(demon.video);
+  return `<div class="detail-title"><div><span class="detail-rank">#${demon.position}</span><h2 id="detailTitle">${escapeHtml(demon.name)}</h2></div><a class="detail-source" href="${pointercrateUrl(demon)}" target="_blank" rel="noopener noreferrer">${t.source}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 17 17 7M6 7h11v11"/></svg></a></div>
+    <div class="verification-video">${id ? `<iframe id="verificationPlayer" src="https://www.youtube-nocookie.com/embed/${id}?rel=0" title="${escapeHtml(demon.name + ' · ' + t.video)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>` : `<p>${t.unavailable}</p>`}</div>
+    <dl class="detail-facts"><div><dt>${t.publisher}</dt><dd>${escapeHtml(demon.publisher.name)}</dd></div><div><dt>${t.verifier}</dt><dd>${escapeHtml(demon.verifier.name)}</dd></div><div><dt>${t.levelId}</dt><dd class="level-id">${demon.level_id ?? t.unpublished}</dd></div><div><dt>${t.requirement}</dt><dd>${demon.requirement}%</dd></div></dl>`;
 }

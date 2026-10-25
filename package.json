@@ -14,7 +14,6 @@
     "build": "node scripts/build.js",
     "smoke": "node scripts/smoke.js",
     "snapshot": "node scripts/snapshot.js",
-    "snapshot:mll": "node scripts/snapshot-mll.js",
     "deploy": "npm run check && npm test && wrangler deploy"
   },
   "devDependencies": {

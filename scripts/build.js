@@ -5,7 +5,6 @@ import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import { parseHTML } from 'linkedom';
 import translations from '../lib/translations.js';
-import { renderRows, renderDetail } from '../public/mll-view.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.resolve(root, 'dist');
@@ -63,6 +62,7 @@ for (const language of ['ko', 'en']) {
     document.querySelector('.subtitle-window').setAttribute('aria-label', 'Subtitle translation example');
   }
   const toggle = document.querySelector('#languageToggle');
+  if (en) document.querySelector('.drawer-link[href="/mll"]').href = '/en/mll';
   toggle.textContent = en ? 'KO' : 'EN'; toggle.setAttribute('href', en ? '/' : '/en/'); toggle.setAttribute('lang', en ? 'ko' : 'en');
   toggle.setAttribute('aria-label', en ? '한국어로 전환' : 'Switch site language to English');
   document.querySelector('link[rel="canonical"]').href = url;
@@ -81,14 +81,51 @@ for (const language of ['ko', 'en']) {
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, '<!doctype html>\n' + document.documentElement.outerHTML);
 }
-const { document: mll } = parseHTML(await fs.readFile(path.join(root, 'public/mll.html'), 'utf8'));
-const demonlist = JSON.parse(await fs.readFile(path.join(root, 'data/demonlist.json'), 'utf8'));
-mll.querySelector('link[href="/mll.css"]').href = outputs['mll-style'];
-mll.querySelector('script[src="/mll.js"]').src = outputs.mll;
-mll.querySelector('#demonRows').innerHTML = renderRows(demonlist.demons, demonlist.demons[0]?.id);
-mll.querySelector('#levelDetail').innerHTML = renderDetail(demonlist.demons[0]);
-mll.querySelector('#mllBootstrap').innerHTML = escape(JSON.stringify(demonlist));
-await fs.mkdir(path.join(dist, 'mll'), { recursive: true });
-await fs.writeFile(path.join(dist, 'mll/index.html'), '<!doctype html>\n' + mll.documentElement.outerHTML);
+const mllSource = await fs.readFile(path.join(root, 'public/mll.html'), 'utf8');
+const { document: homeShell } = parseHTML(original);
+for (const language of ['ko', 'en']) {
+  const { document: mll } = parseHTML(mllSource), en = language === 'en';
+  const text = (ko, english) => en ? english : ko;
+  const base = en ? '/en/mll' : '/mll', home = en ? '/en/' : '/';
+  mll.documentElement.lang = language;
+  // Reuse the actual home header and drawer, not a separately styled imitation.
+  mll.querySelector('#siteShell').outerHTML = ['.top-progress', '.header', '.drawer-backdrop', '.drawer'].map(selector => homeShell.querySelector(selector).outerHTML).join('');
+  const brand = mll.querySelector('.brand'); brand.innerHTML = 'MLL<span class="brand-dot">.</span>'; brand.href = base; brand.setAttribute('aria-label', text('MLL 홈', 'MLL home'));
+  mll.querySelector('.nav-channel').remove();
+  const toggle = mll.querySelector('#languageToggle');
+  toggle.textContent = en ? 'KO' : 'EN'; toggle.href = en ? '/mll' : '/en/mll'; toggle.setAttribute('lang', en ? 'ko' : 'en'); toggle.setAttribute('aria-label', en ? '한국어로 전환' : 'Switch site language to English');
+  mll.querySelector('.nav').setAttribute('aria-label', text('주요 메뉴', 'Main navigation'));
+  mll.querySelector('#menuTrigger').setAttribute('aria-label', text('메뉴 열기', 'Open menu'));
+  mll.querySelector('#siteDrawer').setAttribute('aria-label', text('사이트 메뉴', 'Site menu'));
+  mll.querySelector('.drawer-menu-title').innerHTML = text('메뉴', 'Menu') + '<span class="brand-dot">.</span>';
+  mll.querySelector('.drawer-overline').textContent = text('바로 이동', 'JUMP TO');
+  const links = mll.querySelector('.drawer-links'); links.setAttribute('aria-label', text('사이트 메뉴', 'Site links'));
+  links.innerHTML = [[base + '#ranking', text('데몬리스트', 'Demonlist')], [home, text('문탕닷컴', 'Muntang.com')]].map(([href, label], index) => `<a class="drawer-link drawer-stagger" href="${href}"><span>${label}</span><small>0${index + 1}</small><em>↗</em></a>`).join('');
+  mll.querySelector('.drawer-foot').innerHTML = `<a class="drawer-channel" href="https://pointercrate.com/demonlist/" target="_blank" rel="noopener noreferrer">Pointercrate <span>↗</span></a>`;
+  mll.querySelector('#ldmStatus').textContent = text('끔', 'Off');
+  mll.querySelector('#ldmToggle').setAttribute('aria-label', text('LDM 저사양 모드 켜기', 'Enable Low Detail Mode'));
+  mll.querySelector('.footer-brand').href = base; mll.querySelector('#mainSiteLink').href = home;
+  mll.querySelector('link[rel=canonical]').href = 'https://muntang.com' + base;
+  mll.querySelector('meta[property="og:url"]').content = 'https://muntang.com' + base;
+  mll.querySelector('link[href="/styles.css"]').href = outputs.css;
+  mll.querySelector('link[href="/mll.css"]').href = outputs['mll-style'];
+  mll.querySelector('script[src="/mll.js"]').src = outputs.mll;
+  mll.querySelector('script[src="/language.js"]').src = outputs.language;
+  if (en) {
+    const strings = { listDescription:'Pointercrate Demonlist #1–150', originalListText:'Original list', resultCount:'Loading…', searchLabel:'Search level, publisher, verifier or ID', retrySync:'Try again', rankLabel:'Rank', levelLabel:'Level / Publisher', verifierLabel:'Verifier', emptyState:'Loading the demonlist…', mainSiteLink:'Muntang.com ↗', dataCredit:'Rankings: Pointercrate ↗' };
+    for (const [id, value] of Object.entries(strings)) mll.getElementById(id).textContent = value;
+    mll.querySelector('#levelSearch').placeholder = 'Search levels';
+    mll.querySelector('.skip-link').textContent = 'Skip to demonlist';
+    mll.querySelector('#levelDetail').setAttribute('aria-label', 'Selected level details');
+    mll.querySelector('#ranking').setAttribute('aria-label', 'Demonlist rankings');
+    mll.querySelector('#demonRows').setAttribute('aria-label', 'Ranks 1 through 150');
+    mll.querySelector('#noScriptText').innerHTML = 'Enable JavaScript to load the current demonlist. <a href="https://pointercrate.com/demonlist/">View on Pointercrate ↗</a>';
+    mll.querySelector('meta[name="description"]').content = 'Muntang Level List. View the top 150 Pointercrate demons and verification videos.';
+    mll.querySelector('meta[property="og:description"]').content = 'Pointercrate Demonlist #1–150';
+  }
+  const directory = path.join(dist, en ? 'en/mll' : 'mll');
+  await fs.mkdir(directory, { recursive: true });
+  await fs.writeFile(path.join(directory, 'index.html'), '<!doctype html>\n' + mll.documentElement.outerHTML);
+}
 await fs.writeFile(path.join(dist, 'asset-manifest.json'), JSON.stringify(outputs) + '\n');
 console.log('Built Korean, English and MLL pages with versioned JS/CSS:', outputs);

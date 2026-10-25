@@ -12,7 +12,8 @@ for (const pathname of ['/', '/en/']) {
 }
 const missing = await fetch(new URL('/missing-smoke-check', base)); assert.equal(missing.status, 404); assert.match(await missing.text(), /404/);
 const mllPage = await fetch(new URL('/mll', base)); assert.equal(mllPage.status, 200); assert.equal(new URL(mllPage.url).pathname, '/mll');
-const mllHtml = await mllPage.text(); assert.equal((mllHtml.match(/class="level-row/g) || []).length, 150);
+const mllHtml = await mllPage.text(); assert.match(mllHtml, /id="demonRows"/); assert.doesNotMatch(mllHtml, /mllBootstrap|data-range/);
+const mllEnglish = await fetch(new URL('/en/mll',base)); assert.equal(mllEnglish.status,200); assert.match(await mllEnglish.text(), /lang="en"/);
 const mllApi = await fetch(new URL('/api/mll', base)); assert.equal(mllApi.status, 200);
 const mllData = await mllApi.json(); assert.equal(mllData.demons.length, 150); assert.equal(mllData.demons[0].position, 1); assert.equal(mllData.demons.at(-1).position, 150);
 const mllSlash = await fetch(new URL('/mll/', base), { redirect: 'manual' }); assert.equal(mllSlash.status, 308); assert.equal(new URL(mllSlash.headers.get('location')).pathname, '/mll');
