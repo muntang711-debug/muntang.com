@@ -1,5 +1,8 @@
+import { initPageScroll } from './page-scroll.js';
+
 // The MLL build uses the home page's header/drawer markup and styles.
 export function initMllShell(language = 'ko') {
+  initPageScroll();
   const $ = selector => document.querySelector(selector);
   const en = language === 'en', text = (ko, english) => en ? english : ko;
   const trigger = $('#menuTrigger'), drawer = $('#siteDrawer'), backdrop = $('#drawerBackdrop');

@@ -1,8 +1,10 @@
 import { createSlideClock, createFpsSampler } from './motion-clock.js';
+import { initPageScroll } from './page-scroll.js';
 import { initScene } from './scene.js';
 import { mergeVideos, filterVideos, pageTypes, formatDate } from './video-state.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
+initPageScroll();
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const language = document.documentElement.lang === 'en' ? 'en' : 'ko';
 const en = language === 'en';
