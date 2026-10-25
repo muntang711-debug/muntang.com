@@ -1040,3 +1040,6 @@ html.video-modal-open,body.video-modal-open{overflow:hidden}
 .drawer.is-open .site-menu-groups .drawer-stagger{transition-delay:var(--menu-delay,.14s),var(--menu-delay,.14s),0s,0s}
 .drawer .drawer-category-link em{color:#c8beb0;transition:color .2s}
 .drawer .drawer-category-link:hover em,.drawer .drawer-category-link:focus-visible em{color:var(--orange)}
+
+.feature-image img:not([src]),.float-image img:not([src]){visibility:hidden}
+.hero-stage [aria-disabled="true"]{pointer-events:none}

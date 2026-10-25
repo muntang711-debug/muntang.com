@@ -1,4 +1,4 @@
-import { getCatalog, parseCatalogRequest } from './lib/catalog.js';
+import { getCatalog, parseCatalogRequest, syncCatalog } from './lib/catalog.js';
 import { getDemonlist, syncDemonlist, DEMONLIST_CRON } from './lib/demonlist.js';
 
 export const securityHeaders = {
@@ -35,11 +35,11 @@ export function parseMllRoute(pathname) {
 export default {
   async scheduled(controller, env) {
     if (controller.cron !== DEMONLIST_CRON) return;
-    try {
-      await syncDemonlist(env);
-    } catch (error) {
-      console.error(JSON.stringify({ event: 'demonlist_sync_failed', reason: String(error?.message || 'unavailable').slice(0, 100) }));
-      throw error;
+    const results = await Promise.allSettled([syncDemonlist(env), syncCatalog(env)]);
+    const failures = results.filter(result => result.status === 'rejected');
+    if (failures.length) {
+      console.error(JSON.stringify({ event: 'scheduled_sync_failed', failures: failures.map(result => result.reason?.message || 'unavailable') }));
+      throw new AggregateError(failures.map(result => result.reason), 'ScheduledSyncFailed');
     }
   },
   async fetch(request, env, ctx) {
@@ -56,7 +56,7 @@ export default {
       if (url.pathname === '/api/youtube') {
         const params = parseCatalogRequest(url);
         if (params.error) return withHeaders(Response.json({ ok: false, error: params.error }, { status: 400 }), request, { 'Cache-Control': 'no-store' });
-        const data = request.method === 'HEAD' ? null : await getCatalog(params, ctx);
+        const data = request.method === 'HEAD' ? null : await getCatalog(params, ctx, { storage: env.MLL_DATA });
         const code = data?.ok === false ? 503 : 200;
         return withHeaders(Response.json(data, { status: code }), request, { 'Cache-Control': 'no-store', ...(code === 503 ? { 'Retry-After': '30' } : {}) });
       }

@@ -118,7 +118,6 @@ const grid = $('#videoGrid'), search = $('#videoSearch'), status = $('#archiveSt
 let videos = [], tokens = { videos: '', shorts: '' }, complete = { videos: false, shorts: false };
 let filter = 'all', loading = false, loadError = false, catalogStatus = 'stale', modalOpen = false, activeVideoId = '';
 let heroVideos = [], carouselIndex = 0, heroInView = true, heroFocused = false, userPaused = false;
-try { const node = $('#videoBootstrap'); const data = JSON.parse(node.content.textContent || node.textContent); videos = mergeVideos([], data.videos); } catch { /* The static links remain available if bootstrap fails. */ }
 
 const videoModal = $('#videoModal'), videoFrame = $('#videoModalFrame'), modalClose = $('#videoModalClose');
 let modalReturnFocus, modalCloseTimer = 0, modalBackground = [];
@@ -197,7 +196,7 @@ function renderVideos() {
   const matches = filterVideos(videos, filter, search.value);
   const fragment = document.createDocumentFragment();
   matches.forEach((video, index) => fragment.appendChild(makeCard(video, index)));
-  if (!matches.length) fragment.appendChild(create('div', 'video-empty', text('불러온 영상에서 검색 결과가 없습니다.', 'No matches among the loaded videos.')));
+  if (!matches.length) fragment.appendChild(create('div', 'video-empty', !videos.length ? (loadError ? text('영상을 불러오지 못했습니다. 다시 시도해 주세요.', 'Could not load videos. Please try again.') : text('영상 불러오는 중…', 'Loading videos…')) : text('불러온 영상에서 검색 결과가 없습니다.', 'No matches among the loaded videos.')));
   grid.replaceChildren(fragment);
   $('#videoCount').textContent = String(matches.length).padStart(2, '0');
   $('#videoCountSuffix').textContent = text('개 영상', 'videos');
@@ -305,6 +304,9 @@ function refreshHero() {
   const next = videos.filter(video => video.type !== 'short');
   const changed = next.map(v => v.id).join(',') !== heroVideos.map(v => v.id).join(',');
   heroVideos = next;
+  $('#heroVideo').setAttribute('aria-disabled', String(!heroVideos.length));
+  $('#heroPeek').setAttribute('aria-disabled', String(heroVideos.length < 2));
+  $('.subtitle-example-note a').href = heroVideos.length ? heroVideos[0].url + '&cc_load_policy=1&cc_lang_pref=en' : 'https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4';
   if (!heroVideos.length) return;
   carouselIndex = Math.max(0, heroVideos.findIndex(video => video.id === currentId));
   if (changed || !heroTransitionBusy) {
@@ -507,7 +509,8 @@ function syncCarousel() {
   $('[data-play-icon]', pauseButton).toggleAttribute('hidden', !userPaused && !reduced);
   $('[data-pause-icon]', pauseButton).toggleAttribute('hidden', userPaused || reduced);
   $('#heroPause').setAttribute('aria-pressed', String(userPaused));
-  $('#heroPause').disabled = reduced;
+  $('#heroPause').disabled = reduced || heroVideos.length < 2;
+  $('#heroPrevious').disabled = $('#heroNext').disabled = heroVideos.length < 2;
   slideClock.setRunning(!paused && heroVideos.length > 1);
 }
 $('#heroPrevious').addEventListener('click', () => { advanceHero(-1, true); syncCarousel(); });
@@ -529,7 +532,7 @@ window.addEventListener('ldmchange', () => { if (heroTransitionBusy && (ldmEnabl
   card.addEventListener('keydown', event => { if (event.target === card && ['Enter', ' '].includes(event.key)) { event.preventDefault(); play(); } });
 });
 
-let fetchController, refreshTimer = 0, refreshChecks = 0;
+let fetchController;
 async function loadMore(initial = false) {
   if (loading) return;
   const types = pageTypes(filter, tokens);
@@ -548,9 +551,6 @@ async function loadMore(initial = false) {
     complete = { ...complete, ...(data.complete || {}) };
     catalogStatus = data.status || 'degraded';
     refreshHero();
-    if (!type && data.status === 'stale' && data.warnings?.includes('refreshing') && refreshChecks++ < 2) {
-      clearTimeout(refreshTimer); refreshTimer = setTimeout(() => loadMore(true), 7500);
-    }
   } catch (error) {
     if (error.name !== 'AbortError' || !document.hidden) loadError = true;
   } finally { clearTimeout(timeout); loading = false; renderVideos(); }
@@ -558,7 +558,7 @@ async function loadMore(initial = false) {
 search.addEventListener('input', renderVideos);
 $$('[data-video-filter]').forEach(button => button.addEventListener('click', () => { filter = button.dataset.videoFilter; renderVideos(); }));
 loadButton.addEventListener('click', () => loadMore(false));
-window.addEventListener('pagehide', () => { fetchController?.abort(); clearTimeout(refreshTimer); slideClock.setRunning(false); settleHeroTransition(); stopFpsMonitor(); });
+window.addEventListener('pagehide', () => { fetchController?.abort(); slideClock.setRunning(false); settleHeroTransition(); stopFpsMonitor(); });
 
 const suggestion = $('#ldmSuggestion');
 let fpsFrame = 0, fpsDismissed = false;
@@ -582,3 +582,5 @@ document.addEventListener('visibilitychange', syncFpsMonitor);
 setLdm(ldmEnabled);
 initScene($, () => reduced, () => ldmEnabled);
 renderVideos(); refreshHero(); updateScroll(); loadMore(true);
+const catalogPoll = setInterval(() => { if (!document.hidden && !modalOpen) loadMore(true); }, 300_000);
+window.addEventListener('pagehide', () => clearInterval(catalogPoll));

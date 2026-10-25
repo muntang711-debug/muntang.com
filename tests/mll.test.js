@@ -116,18 +116,26 @@ test('empty storage bootstraps from the real collector, never hardcoded data', a
   assert.equal(unavailable.ok, false); assert.deepEqual(unavailable.demons, []);
 });
 
-test('cron synchronizes without any visitor requests', async t => {
+test('cron synchronizes both MLL and bilingual YouTube without visitor requests', async t => {
   const original = globalThis.fetch; t.after(() => { globalThis.fetch = original; });
   let calls = 0;
   globalThis.fetch = async raw => {
     calls++;
-    const after = Number(new URL(raw).searchParams.get('after'));
-    return Response.json(saved.demons.slice(after, after === 0 ? 100 : 150));
+    if (new URL(raw).hostname === 'pointercrate.com') {
+      const after = Number(new URL(raw).searchParams.get('after'));
+      return Response.json(saved.demons.slice(after, after === 0 ? 100 : 150));
+    }
+    if (raw.includes('/feeds/')) return new Response('',{status:404});
+    const item = raw.includes('/shorts?') ? {reelItemRenderer:{videoId:'12345678901',headline:{simpleText:'Live short'}}} : {videoRenderer:{videoId:'abcdefghijk',title:{simpleText:'Live video'},thumbnail:{thumbnails:[{url:'https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg'}]}}};
+    return new Response('var ytInitialData = '+JSON.stringify({richGridRenderer:{contents:[item]}})+';');
   };
-  const kv = storage();
+  const entries=new Map(); const kv={get:async key=>entries.get(key)||null,put:async(key,json)=>entries.set(key,JSON.parse(json))};
   await worker.scheduled({ cron: DEMONLIST_CRON }, { MLL_DATA: kv });
-  assert.equal(calls, 2); assert.equal(kv.writes.length, 1); assert.equal(kv.writes[0].demons.length, 150);
-  await worker.scheduled({ cron: '0 * * * *' }, { MLL_DATA: kv }); assert.equal(calls, 2);
+  assert.equal(calls,8); assert.equal(entries.size,3); assert.equal(entries.get(DEMONLIST_KEY).demons.length,150);
+  assert.equal(entries.get('youtube:catalog:v1:ko').data.language,'ko');
+  assert.equal(entries.get('youtube:catalog:v1:ko').data.videos.length,2);
+  assert.equal(entries.get('youtube:catalog:v1:en').data.language,'en');
+  await worker.scheduled({cron:'0 * * * *'},{MLL_DATA:kv}); assert.equal(calls,8);
 });
 
 test('MLL canonical path resolves without a slash redirect loop', async () => {

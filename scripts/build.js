@@ -25,12 +25,10 @@ for (const [name, entry] of Object.entries({ app: 'script.js', style: 'styles.cs
   await fs.writeFile(path.join(dist, outputs[key]), content);
 }
 
-const escape = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 const original = await fs.readFile(path.join(root, 'public/index.html'), 'utf8');
 for (const language of ['ko', 'en']) {
   const { document } = parseHTML(original);
   const en = language === 'en';
-  const data = JSON.parse(await fs.readFile(path.join(root, `data/youtube-${language}.json`), 'utf8'));
   const url = 'https://muntang.com' + (en ? '/en/' : '/');
   document.documentElement.lang = language;
   if (en) {
@@ -59,7 +57,7 @@ for (const language of ['ko', 'en']) {
       document.getElementById(id).setAttribute('aria-label', label);
       document.getElementById(id).setAttribute('title', label);
     }
-    document.querySelector('.subtitle-example-note').innerHTML = 'The window below demonstrates subtitle translation and placement. <a href="https://www.youtube.com/watch?v=5D9M7hhDNlY&amp;cc_load_policy=1&amp;cc_lang_pref=en" target="_blank" rel="noopener noreferrer">Watch a video with English captions ↗</a>';
+    document.querySelector('.subtitle-example-note').innerHTML = 'The window below demonstrates subtitle translation and placement. <a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" target="_blank" rel="noopener noreferrer">Watch a video with English captions ↗</a>';
     document.querySelector('.subtitle-window').setAttribute('aria-label', 'Subtitle translation example');
   }
   const toggle = document.querySelector('#languageToggle');
@@ -71,13 +69,10 @@ for (const language of ['ko', 'en']) {
   document.querySelector('link[href="/styles.css"]').href = outputs.css;
   document.querySelector('script[src="/script.js"]').src = outputs.js;
   document.querySelector('script[src="/language.js"]').src = outputs.language;
-  document.querySelector('#videoCount').textContent = String(data.videos.length);
   document.querySelector('#archiveStatus').textContent = '';
-
-  document.querySelector('#videoBootstrap').innerHTML = escape(JSON.stringify(data));
-  document.querySelector('#videoGrid').innerHTML = data.videos.map((video, index) => `<article class="video-card is-visible"><a href="${escape(video.url)}" target="_blank" rel="noopener noreferrer"><div class="video-frame"><img src="${escape(video.thumbnail_url)}" alt="${escape(video.title)}" width="480" height="360" loading="lazy"><span class="video-index">${index + 1}</span></div><div class="video-card-text"><span class="video-card-title">${escape(video.title)}</span><span class="video-card-arrow" aria-hidden="true">↗</span></div></a></article>`).join('');
-  const featured = data.featured?.[0] || data.videos.find(v => v.type !== 'short');
-  if (featured) { document.querySelector('#heroTitle').textContent = featured.title; document.querySelector('#heroVideo').dataset.videoId = featured.id; }
+  document.querySelector('#videoGrid').innerHTML = '<div class="video-empty">' + (en ? 'Loading videos…' : '영상 불러오는 중…') + '</div>';
+  document.querySelector('#heroTitle').textContent = en ? 'Loading videos…' : '영상 불러오는 중…';
+  document.querySelector('#peekTitle').textContent = en ? 'Loading videos…' : '영상 불러오는 중…';
   const target = en ? path.join(dist, 'en/index.html') : path.join(dist, 'index.html');
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, '<!doctype html>\n' + document.documentElement.outerHTML);

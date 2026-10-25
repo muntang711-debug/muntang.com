@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { parseHTML } from 'linkedom';
 import worker, { canonicalLocation } from '../worker.js';
-import { getCatalog, parseCatalogRequest, catalogCacheKey } from '../lib/catalog.js';
+import { getCatalog, parseCatalogRequest, catalogCacheKey, syncCatalogLanguage, syncCatalog, catalogStorageKey } from '../lib/catalog.js';
 import { readUpstream, collectCatalog, fetchPage } from '../lib/youtube.js';
 import { parseEmbeddedJson, collectYouTubeVideos, findYouTubeContinuation } from '../lib/youtube-parser.js';
 import { mergeVideos, filterVideos, pageTypes, formatDate } from '../public/video-state.js';
@@ -50,23 +50,35 @@ test('tracking queries and explicit Korean use one normalized cache entry', () =
 });
 const params = { language: 'ko', type: 'videos', continuation: '' };
 function memoryCache() { const entries = new Map(); return { entries, match: async request => entries.get(request.url)?.clone(), put: async (request, response) => entries.set(request.url, response.clone()) }; }
-test('stale catalog returns immediately and refreshes in waitUntil', async () => {
-  const cache = memoryCache(), tasks = [];
-  let finish;
-  const pending = new Promise(resolve => { finish = resolve; });
-  const result = await getCatalog(params, { waitUntil: task => tasks.push(task) }, { cache, collector: () => pending });
-  assert.equal(result.status, 'stale'); assert.ok(result.videos.length); assert.equal(cache.entries.size, 0);
-  finish({ ok: true, status: 'fresh', language: 'ko', videos: [{ id: 'abcdefghijk', title: '새 영상' }] });
-  await Promise.all(tasks);
-  assert.equal((await getCatalog(params, null, { cache, collector: () => assert.fail('fresh cache should not refetch') })).status, 'fresh');
+function memoryStorage() {
+  const entries = new Map();
+  return { entries, get: async key => entries.has(key) ? JSON.parse(entries.get(key)) : null, put: async (key, value) => entries.set(key, value) };
+}
+const collected = language => ({ ok: true, status: 'fresh', language, videos: [{id:'abcdefghijk',title:language === 'en' ? 'Live title' : '실제 수집 제목',type:'video'}],nextContinuations:{videos:'',shorts:''} });
+test('scheduled catalogs are stored separately and visitor reads never collect again', async () => {
+  const storage = memoryStorage(); const now = Date.now();
+  await syncCatalog({MLL_DATA:storage}, {collector: async language => collected(language),now});
+  assert.equal(storage.entries.size, 2);
+  for (const language of ['ko','en']) {
+    const data = await getCatalog({...params,language},null,{storage,now:now+60_000,collector:()=>assert.fail('stored catalogs must not collect on reads')});
+    assert.equal(data.language,language); assert.equal(data.status,'fresh'); assert.equal(data.syncIntervalSeconds,300);
+  }
+  const old = await getCatalog(params,null,{storage,now:now+600_000,collector:()=>assert.fail('stale catalogs wait for the cron')});
+  assert.equal(old.status,'stale'); assert.equal(old.videos[0].title,'실제 수집 제목');
 });
-test('complete upstream failure preserves last known data without caching fake success', async () => {
-  const cache = memoryCache();
-  const result = await getCatalog(params, null, { cache, collector: async () => { throw new Error('upstream offline'); } });
-  assert.equal(result.status, 'stale'); assert.ok(result.videos.every(video => video.title)); assert.equal(cache.entries.size, 0);
-  const next = await getCatalog({ ...params, continuation: 'valid-token' }, null, { cache, pageFetcher: async () => ({ ok: false }) });
-  assert.equal(next.ok, false); assert.equal(next.status, 'unavailable'); assert.equal(cache.entries.size, 0);
+test('failed sync preserves only previously collected KV data; missing data is unavailable', async () => {
+  const storage = memoryStorage();
+  await syncCatalogLanguage(storage,'ko',{collector:async()=>collected('ko')});
+  const before = storage.entries.get(catalogStorageKey('ko'));
+  await assert.rejects(syncCatalogLanguage(storage,'ko',{collector:async()=>{throw new Error('upstream offline')}}));
+  assert.equal(storage.entries.get(catalogStorageKey('ko')),before);
+  const empty = await getCatalog(params,null,{storage:memoryStorage(),collector:async()=>{throw new Error('upstream offline')}});
+  assert.equal(empty.ok,false); assert.equal(empty.status,'unavailable'); assert.deepEqual(empty.videos,[]);
+  const invalid = memoryStorage();
+  await assert.rejects(syncCatalogLanguage(invalid,'ko',{collector:async()=>({...collected('ko'),videos:[]})}),/InvalidCatalog/);
+  assert.equal(invalid.entries.size,0);
 });
+
 test('Shorts continuations use a separate upstream tab and token', async () => {
   const cache = memoryCache(); let args;
   const result = await getCatalog({ ...params, type: 'shorts', continuation: 'short-token' }, null, { cache, pageFetcher: async (...values) => { args = values; return { ok: true, videos: [], nextContinuation: 'short-next' }; } });
@@ -118,13 +130,15 @@ test('worker revalidates HTML, makes versioned files immutable and returns usefu
   const post = await worker.fetch(new Request('https://muntang.com/api/youtube', { method: 'POST' }), {}); assert.equal(post.status, 405);
   const invalid = await worker.fetch(new Request('https://muntang.com/api/youtube?type=bad', { method: 'HEAD' }), {}); assert.equal(invalid.status, 400); assert.equal(await invalid.text(), '');
 });
-test('built pages contain complete initial titles, distinct language metadata and working asset paths', async () => {
+test('built pages contain no video data and keep distinct language metadata and working asset paths', async () => {
   for (const [language, file] of [['ko', 'dist/index.html'], ['en', 'dist/en/index.html']]) {
     const { document } = parseHTML(await fs.readFile(file, 'utf8'));
     assert.equal(document.documentElement.lang, language);
     assert.equal(document.querySelector('link[rel=canonical]').getAttribute('href'), language === 'en' ? 'https://muntang.com/en/' : 'https://muntang.com/');
-    assert.ok(document.querySelectorAll('#videoGrid .video-card').length >= 17);
-    const node = document.querySelector('#videoBootstrap'); const data = JSON.parse(node.content.textContent || node.textContent); assert.ok(data.videos.every(video => video.title));
+    assert.equal(document.querySelectorAll('#videoGrid .video-card').length,0);
+    assert.equal(document.querySelector('#videoBootstrap'),null);
+    assert.equal(document.querySelector('#heroThumbnail').getAttribute('src'),null);
+    assert.equal(document.querySelectorAll('[data-video-id]').length,0);
     for (const node of document.querySelectorAll('script[src],link[rel=stylesheet]')) { const url = node.getAttribute('src') || node.getAttribute('href'); assert.match(url, /\.[a-f0-9]{12}\./); await fs.access('dist' + url); }
     assert.ok(document.querySelector('#videoModal').hasAttribute('hidden'));
     assert.equal(document.querySelector('#videoDialog').getAttribute('role'), 'dialog');
