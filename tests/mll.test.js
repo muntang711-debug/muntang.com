@@ -194,7 +194,7 @@ test('MLL reuses the home header/drawer, has separate bilingual routes and embed
   }
   for (const file of ['dist/index.html', 'dist/en/index.html']) {
     const { document: home } = parseHTML(await fs.readFile(file, 'utf8'));
-    assert.equal(home.querySelector('.drawer-app-link[href="' + (file.includes('/en/') ? '/en/mll' : '/mll') + '"] span').textContent, 'MLL');
+    assert.equal(home.querySelector('.drawer-category-link[href="' + (file.includes('/en/') ? '/en/mll' : '/mll') + '"] span').textContent, 'MLL');
     assert.equal(home.querySelector('.drawer-links a[href$="/mll"]'),null);
   }
 });

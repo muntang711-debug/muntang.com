@@ -39,7 +39,7 @@ function setDrawer(open) {
 }
 trigger.addEventListener('click', () => setDrawer(!drawerOpen));
 backdrop.addEventListener('click', () => setDrawer(false));
-$$('.drawer-link', drawer).forEach(link => link.addEventListener('click', () => setDrawer(false)));
+$$('a[href]', drawer).forEach(link => link.addEventListener('click', () => setDrawer(false)));
 document.addEventListener('keydown', event => {
   if (drawerOpen && event.key === 'Escape') { event.preventDefault(); setDrawer(false); }
   if (drawerOpen && event.key === 'Tab') {

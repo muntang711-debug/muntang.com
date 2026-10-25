@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import { parseHTML } from 'linkedom';
 import translations from '../lib/translations.js';
+import { applySiteMenu } from '../lib/navigation.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.resolve(root, 'dist');
@@ -62,7 +63,7 @@ for (const language of ['ko', 'en']) {
     document.querySelector('.subtitle-window').setAttribute('aria-label', 'Subtitle translation example');
   }
   const toggle = document.querySelector('#languageToggle');
-  if (en) document.querySelector('.drawer-app-link[href="/mll"]').href = '/en/mll';
+  applySiteMenu(document, language);
   toggle.textContent = en ? 'KO' : 'EN'; toggle.setAttribute('href', en ? '/' : '/en/'); toggle.setAttribute('lang', en ? 'ko' : 'en');
   toggle.setAttribute('aria-label', en ? '한국어로 전환' : 'Switch site language to English');
   document.querySelector('link[rel="canonical"]').href = url;
@@ -99,11 +100,7 @@ for (const language of ['ko', 'en']) {
   mll.querySelector('#menuTrigger').setAttribute('aria-label', text('메뉴 열기', 'Open menu'));
   mll.querySelector('#siteDrawer').setAttribute('aria-label', text('사이트 메뉴', 'Site menu'));
   mll.querySelector('.drawer-menu-title').innerHTML = text('메뉴', 'Menu') + '<span class="brand-dot">.</span>';
-  mll.querySelector('.drawer-overline').textContent = text('바로 이동', 'JUMP TO');
-  const links = mll.querySelector('.drawer-links'); links.setAttribute('aria-label', text('사이트 메뉴', 'Site links'));
-  links.innerHTML = `<a class="drawer-link drawer-stagger" href="${base}"><span>${text('데몬리스트', 'Demonlist')}</span><em>↗</em></a>`;
-  mll.querySelector('.drawer-app-link').outerHTML = `<a class="drawer-home-link drawer-stagger" href="${home}">${text('문탕닷컴으로 돌아가기', 'Back to Muntang.com')} <span>↗</span></a>`;
-  mll.querySelector('.drawer-foot').innerHTML = `<a class="drawer-channel" href="https://pointercrate.com/demonlist/" target="_blank" rel="noopener noreferrer">Pointercrate <span>↗</span></a>`;
+  applySiteMenu(mll, language);
   mll.querySelector('#ldmStatus').textContent = text('끔', 'Off');
   mll.querySelector('#ldmToggle').setAttribute('aria-label', text('LDM 저사양 모드 켜기', 'Enable Low Detail Mode'));
   mll.querySelector('.footer-brand').href = base; mll.querySelector('#mainSiteLink').href = home;
