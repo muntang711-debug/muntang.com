@@ -40,16 +40,17 @@ export function renderRows(demons, selectedId, query = '', language = 'ko') {
   return demons.map((demon, index) => {
     const idMatch = needle && String(demon.level_id ?? '').includes(needle);
     return `<li class="level-row${demon.id === selectedId ? ' is-selected' : ''}" style="--row-delay:${Math.min(index, 9) * 24}ms">
-      <button class="level-select" type="button" data-level-id="${demon.id}" aria-pressed="${demon.id === selectedId}" aria-label="${escapeHtml(t.select + ': ' + demon.name)}"><span class="level-rank">${highlight('#' + demon.position, query)}</span><span class="level-copy"><strong>${highlight(demon.name, query)}</strong><span class="level-publisher">${highlight(demon.publisher.name, query)}${idMatch ? `<span class="level-match">ID ${highlight(demon.level_id, query)}</span>` : ''}</span></span><span class="level-verifier">${highlight(demon.verifier.name, query)}</span></button>
+      <a class="level-select" href="${language === 'en' ? '/en/mll' : '/mll'}/${demon.position}" aria-label="${escapeHtml(t.select + ': ' + demon.name)}"><span class="level-rank">${highlight('#' + demon.position, query)}</span><span class="level-copy"><strong>${highlight(demon.name, query)}</strong><span class="level-publisher">${highlight(demon.publisher.name, query)}${idMatch ? `<span class="level-match">ID ${highlight(demon.level_id, query)}</span>` : ''}</span></span><span class="level-verifier">${highlight(demon.verifier.name, query)}</span></a>
       <a class="level-external" href="${pointercrateUrl(demon)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(t.external + ': #' + demon.position + ' ' + demon.name)}" title="${escapeHtml(t.external)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 17 17 7M6 7h11v11"/></svg></a></li>`;
   }).join('');
 }
 
-export function renderDetail(demon, language = 'ko') {
+export function renderDetail(demon, language = 'ko', heading = 'h2') {
   const t = labels(language);
   if (!demon) return `<p class="detail-empty">${t.empty}</p>`;
   const id = youtubeId(demon.video);
-  return `<div class="detail-title"><div><span class="detail-rank">#${demon.position}</span><h2 id="detailTitle">${escapeHtml(demon.name)}</h2></div><a class="detail-source" href="${pointercrateUrl(demon)}" target="_blank" rel="noopener noreferrer">${t.source}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 17 17 7M6 7h11v11"/></svg></a></div>
+  const tag = heading === 'h1' ? 'h1' : 'h2';
+  return `<div class="detail-title"><div><span class="detail-rank">#${demon.position}</span><${tag} id="detailTitle">${escapeHtml(demon.name)}</${tag}></div><a class="detail-source" href="${pointercrateUrl(demon)}" target="_blank" rel="noopener noreferrer">${t.source}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 17 17 7M6 7h11v11"/></svg></a></div>
     <div class="verification-video">${id ? `<iframe id="verificationPlayer" src="https://www.youtube-nocookie.com/embed/${id}?rel=0" title="${escapeHtml(demon.name + ' · ' + t.video)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>` : `<p>${t.unavailable}</p>`}</div>
     <dl class="detail-facts"><div><dt>${t.publisher}</dt><dd>${escapeHtml(demon.publisher.name)}</dd></div><div><dt>${t.verifier}</dt><dd>${escapeHtml(demon.verifier.name)}</dd></div><div><dt>${t.levelId}</dt><dd class="level-id">${demon.level_id ?? t.unpublished}</dd></div><div><dt>${t.requirement}</dt><dd>${demon.requirement}%</dd></div></dl>`;
 }

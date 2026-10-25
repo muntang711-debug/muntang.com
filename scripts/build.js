@@ -14,7 +14,7 @@ await fs.mkdir(path.join(dist, 'assets'), { recursive: true });
 await fs.cp(path.join(root, 'public'), dist, { recursive: true, filter: source => !/\.(?:js|css)$/.test(source) && !['index.html', 'mll.html'].includes(path.basename(source)) });
 
 const outputs = {};
-for (const [name, entry] of Object.entries({ app: 'script.js', style: 'styles.css', language: 'language.js', mll: 'mll.js', 'mll-style': 'mll.css' })) {
+for (const [name, entry] of Object.entries({ app: 'script.js', style: 'styles.css', language: 'language.js', mll: 'mll.js', 'mll-level': 'mll-level.js', 'mll-style': 'mll.css' })) {
   const result = await build({ entryPoints: [path.join(root, 'public', entry)], bundle: true, minify: true, target: 'es2022', write: false, legalComments: 'inline', format: 'iife' });
   const content = result.outputFiles[0].contents;
   const ext = entry.endsWith('.css') ? 'css' : 'js';
@@ -62,7 +62,7 @@ for (const language of ['ko', 'en']) {
     document.querySelector('.subtitle-window').setAttribute('aria-label', 'Subtitle translation example');
   }
   const toggle = document.querySelector('#languageToggle');
-  if (en) document.querySelector('.drawer-link[href="/mll"]').href = '/en/mll';
+  if (en) document.querySelector('.drawer-app-link[href="/mll"]').href = '/en/mll';
   toggle.textContent = en ? 'KO' : 'EN'; toggle.setAttribute('href', en ? '/' : '/en/'); toggle.setAttribute('lang', en ? 'ko' : 'en');
   toggle.setAttribute('aria-label', en ? '한국어로 전환' : 'Switch site language to English');
   document.querySelector('link[rel="canonical"]').href = url;
@@ -91,6 +91,7 @@ for (const language of ['ko', 'en']) {
   // Reuse the actual home header and drawer, not a separately styled imitation.
   mll.querySelector('#siteShell').outerHTML = ['.top-progress', '.header', '.drawer-backdrop', '.drawer'].map(selector => homeShell.querySelector(selector).outerHTML).join('');
   const brand = mll.querySelector('.brand'); brand.innerHTML = 'MLL<span class="brand-dot">.</span>'; brand.href = base; brand.setAttribute('aria-label', text('MLL 홈', 'MLL home'));
+  brand.outerHTML = `<div class="mll-brand-group">${brand.outerHTML}<a class="return-home" href="${home}" aria-label="${text('문탕닷컴으로 돌아가기', 'Back to Muntang.com')}"><span class="return-home-full">${text('문탕닷컴으로 돌아가기', 'Back to Muntang.com')}</span><span class="return-home-short">${text('문탕닷컴', 'Muntang.com')}</span> <span aria-hidden="true">↗</span></a></div>`;
   mll.querySelector('.nav-channel').remove();
   const toggle = mll.querySelector('#languageToggle');
   toggle.textContent = en ? 'KO' : 'EN'; toggle.href = en ? '/mll' : '/en/mll'; toggle.setAttribute('lang', en ? 'ko' : 'en'); toggle.setAttribute('aria-label', en ? '한국어로 전환' : 'Switch site language to English');
@@ -100,7 +101,8 @@ for (const language of ['ko', 'en']) {
   mll.querySelector('.drawer-menu-title').innerHTML = text('메뉴', 'Menu') + '<span class="brand-dot">.</span>';
   mll.querySelector('.drawer-overline').textContent = text('바로 이동', 'JUMP TO');
   const links = mll.querySelector('.drawer-links'); links.setAttribute('aria-label', text('사이트 메뉴', 'Site links'));
-  links.innerHTML = [[base + '#ranking', text('데몬리스트', 'Demonlist')], [home, text('문탕닷컴', 'Muntang.com')]].map(([href, label], index) => `<a class="drawer-link drawer-stagger" href="${href}"><span>${label}</span><small>0${index + 1}</small><em>↗</em></a>`).join('');
+  links.innerHTML = `<a class="drawer-link drawer-stagger" href="${base}"><span>${text('데몬리스트', 'Demonlist')}</span><em>↗</em></a>`;
+  mll.querySelector('.drawer-app-link').outerHTML = `<a class="drawer-home-link drawer-stagger" href="${home}">${text('문탕닷컴으로 돌아가기', 'Back to Muntang.com')} <span>↗</span></a>`;
   mll.querySelector('.drawer-foot').innerHTML = `<a class="drawer-channel" href="https://pointercrate.com/demonlist/" target="_blank" rel="noopener noreferrer">Pointercrate <span>↗</span></a>`;
   mll.querySelector('#ldmStatus').textContent = text('끔', 'Off');
   mll.querySelector('#ldmToggle').setAttribute('aria-label', text('LDM 저사양 모드 켜기', 'Enable Low Detail Mode'));
@@ -116,7 +118,6 @@ for (const language of ['ko', 'en']) {
     for (const [id, value] of Object.entries(strings)) mll.getElementById(id).textContent = value;
     mll.querySelector('#levelSearch').placeholder = 'Search levels';
     mll.querySelector('.skip-link').textContent = 'Skip to demonlist';
-    mll.querySelector('#levelDetail').setAttribute('aria-label', 'Selected level details');
     mll.querySelector('#ranking').setAttribute('aria-label', 'Demonlist rankings');
     mll.querySelector('#demonRows').setAttribute('aria-label', 'Ranks 1 through 150');
     mll.querySelector('#noScriptText').innerHTML = 'Enable JavaScript to load the current demonlist. <a href="https://pointercrate.com/demonlist/">View on Pointercrate ↗</a>';
@@ -126,6 +127,26 @@ for (const language of ['ko', 'en']) {
   const directory = path.join(dist, en ? 'en/mll' : 'mll');
   await fs.mkdir(directory, { recursive: true });
   await fs.writeFile(path.join(directory, 'index.html'), '<!doctype html>\n' + mll.documentElement.outerHTML);
+  for (let rank = 1; rank <= 150; rank++) {
+    const { document: level } = parseHTML(mll.documentElement.outerHTML);
+    const route = base + '/' + rank;
+    level.body.dataset.rank = String(rank);
+    level.body.classList.add('mll-level-page');
+    level.querySelector('main').innerHTML = `<div class="level-page-tools"><a class="back-to-list" href="${base}">← ${text('데몬리스트', 'Demonlist')}</a><time id="lastChecked" hidden></time></div><article id="levelDetail" class="standalone-detail"><h1>${text('불러오는 중…', 'Loading…')}</h1></article><p id="levelStatus" role="status"></p><button id="retryLevel" class="retry-level" type="button" hidden>${text('다시 시도', 'Try again')}</button><nav class="level-pagination" aria-label="${text('레벨 이동', 'Level navigation')}"><a id="previousLevel" href="${base}/${rank-1}">← ${text('이전 순위', 'Previous rank')}</a><a href="${base}">${text('목록', 'Demonlist')}</a><a id="nextLevel" href="${base}/${rank+1}">${text('다음 순위', 'Next rank')} →</a></nav>`;
+    if (rank === 1) level.querySelector('#previousLevel').hidden = true;
+    if (rank === 150) level.querySelector('#nextLevel').hidden = true;
+    level.querySelector('.skip-link').href = '#levelDetail';
+    level.querySelector('.skip-link').textContent = text('레벨 정보로 건너뛰기', 'Skip to level details');
+    level.querySelector('#languageToggle').href = (en ? '/mll/' : '/en/mll/') + rank;
+    level.querySelector('script[src="' + outputs.mll + '"]').src = outputs['mll-level'];
+    level.querySelector('link[rel=canonical]').href = 'https://muntang.com' + route;
+    level.querySelector('meta[property="og:url"]').content = 'https://muntang.com' + route;
+    for (const alternate of level.querySelectorAll('link[rel=alternate]')) alternate.href += '/' + rank;
+    level.title = '#' + rank + ' · MLL';
+    const levelDirectory = path.join(directory,String(rank));
+    await fs.mkdir(levelDirectory,{recursive:true});
+    await fs.writeFile(path.join(levelDirectory,'index.html'),'<!doctype html>\n' + level.documentElement.outerHTML);
+  }
 }
 await fs.writeFile(path.join(dist, 'asset-manifest.json'), JSON.stringify(outputs) + '\n');
 console.log('Built Korean, English and MLL pages with versioned JS/CSS:', outputs);

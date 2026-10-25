@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { parseHTML } from 'linkedom';
-import worker, { canonicalLocation } from '../worker.js';
+import worker, { canonicalLocation, parseMllRoute } from '../worker.js';
 import { collectDemonlist, normalizeDemons, syncDemonlist, getDemonlist, DEMONLIST_KEY, DEMONLIST_CRON } from '../lib/demonlist.js';
 import { filterDemons, renderRows, renderDetail, highlight, youtubeId } from '../public/mll-view.js';
 // Synthetic test records only. Production has no bundled demonlist.
@@ -132,6 +132,12 @@ test('cron synchronizes without any visitor requests', async t => {
 test('MLL canonical path resolves without a slash redirect loop', async () => {
   for (const pathname of ['/mll/', '/mll/index.html', '/mll.html']) assert.equal(canonicalLocation(new URL('https://muntang.com' + pathname + '?q=test')), 'https://muntang.com/mll?q=test');
   assert.equal(canonicalLocation(new URL('https://muntang.com/mll')), null);
+  for (const rank of [1,100,150]) {
+    assert.deepEqual(parseMllRoute('/mll/'+rank),{language:'ko',rank});
+    assert.deepEqual(parseMllRoute('/en/mll/'+rank),{language:'en',rank});
+    assert.equal(canonicalLocation(new URL('https://muntang.com/mll/'+rank+'/')), 'https://muntang.com/mll/'+rank);
+  }
+  for (const path of ['/mll/0','/mll/151','/mll/001','/mll/bad']) assert.equal(parseMllRoute(path),null);
   let assetPath;
   const response = await worker.fetch(new Request('https://muntang.com/mll'), { ASSETS: { fetch: async request => { assetPath = new URL(request.url).pathname; return new Response('MLL'); } } });
   assert.equal(response.status, 200); assert.equal(assetPath, '/mll/'); assert.equal(response.headers.get('content-language'), 'ko');
@@ -144,6 +150,9 @@ test('search highlights every matching field and external links use rank, never 
   assert.equal(filterDemons(saved.demons, 'no such level 1234').length, 0);
   const unsafe = { ...demon, name: '<script>alert(1)</script>' };
   assert.doesNotMatch(renderRows([unsafe], unsafe.id), /<script>/); assert.doesNotMatch(renderDetail(unsafe), /<script>/);
+  assert.match(renderRows([demon],null), /class="level-select" href="\/mll\/1"/);
+  assert.match(renderRows([demon],null,'','en'), /href="\/en\/mll\/1"/);
+  assert.doesNotMatch(renderRows([demon],null), /<button/);
   assert.equal(highlight('<Level & Level>', 'level'), '&lt;<mark>Level</mark> &amp; <mark>Level</mark>&gt;');
   assert.match(renderRows([demon], demon.id, 'publisher'), /<mark>Publisher<\/mark>/);
   assert.match(renderRows([demon], demon.id, '100000'), /ID <mark>100000<\/mark>/);
@@ -168,6 +177,10 @@ test('MLL reuses the home header/drawer, has separate bilingual routes and embed
     assert.equal(document.querySelector('#mllBootstrap'), null);
     assert.equal(document.querySelector('[data-range]'), null);
     assert.equal(document.querySelector('.sync-line'), null);
+    assert.equal(document.querySelector('#levelDetail'),null);
+    assert.ok(document.querySelector('#lastChecked'));
+    assert.equal(document.querySelectorAll('.drawer-link small').length,0);
+    assert.ok(document.querySelector('.mll-brand-group .return-home'));
     assert.equal(document.querySelector('.brand').getAttribute('href'), language === 'en' ? '/en/mll' : '/mll');
     assert.equal(document.querySelector('#languageToggle').getAttribute('href'), language === 'en' ? '/mll' : '/en/mll');
     assert.equal(document.querySelector('link[rel=canonical]').getAttribute('href'), 'https://muntang.com' + (language === 'en' ? '/en/mll' : '/mll'));
@@ -181,6 +194,23 @@ test('MLL reuses the home header/drawer, has separate bilingual routes and embed
   }
   for (const file of ['dist/index.html', 'dist/en/index.html']) {
     const { document: home } = parseHTML(await fs.readFile(file, 'utf8'));
-    assert.equal(home.querySelector('.drawer-link[href="' + (file.includes('/en/') ? '/en/mll' : '/mll') + '"] span').textContent, 'MLL');
+    assert.equal(home.querySelector('.drawer-app-link[href="' + (file.includes('/en/') ? '/en/mll' : '/mll') + '"] span').textContent, 'MLL');
+    assert.equal(home.querySelector('.drawer-links a[href$="/mll"]'),null);
+  }
+});
+
+test('standalone rank pages have their own URL, language switch and no ranking sidebar',async()=>{
+  for(const language of ['ko','en']) for(const rank of [1,100,150]) {
+    const base=language==='en'?'/en/mll':'/mll';
+    const {document}=parseHTML(await fs.readFile('dist'+base+'/'+rank+'/index.html','utf8'));
+    assert.equal(document.body.dataset.rank,String(rank));
+    assert.equal(document.querySelector('link[rel=canonical]').getAttribute('href'),'https://muntang.com'+base+'/'+rank);
+    assert.equal(document.querySelector('#languageToggle').getAttribute('href'),(language==='en'?'/mll/':'/en/mll/')+rank);
+    assert.ok(document.querySelector('article#levelDetail'));
+    assert.equal(document.querySelector('#demonRows'),null);
+    assert.ok(document.querySelector('#lastChecked'));
+    assert.equal(document.querySelector('#previousLevel').hasAttribute('hidden'),rank===1);
+    assert.equal(document.querySelector('#nextLevel').hasAttribute('hidden'),rank===150);
+    const src=document.querySelector('script[defer]').getAttribute('src'); assert.match(src,/mll-level\./);
   }
 });

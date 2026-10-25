@@ -31,13 +31,12 @@
     </section>
     <section class="ranking-section" id="ranking" aria-label="데몬리스트 순위">
       <div class="list-column">
-        <div class="list-tools"><p id="resultCount" role="status">불러오는 중…</p><label class="level-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><span id="searchLabel" class="sr-only">레벨명, 업로더, 베리파이어 또는 ID 검색</span><input id="levelSearch" type="search" placeholder="레벨 검색" autocomplete="off" maxlength="120"></label></div>
+        <div class="list-tools"><div class="list-meta"><p id="resultCount" role="status">불러오는 중…</p><time id="lastChecked" hidden></time></div><label class="level-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><span id="searchLabel" class="sr-only">레벨명, 업로더, 베리파이어 또는 ID 검색</span><input id="levelSearch" type="search" placeholder="레벨 검색" autocomplete="off" maxlength="120"></label></div>
         <div class="list-notice" hidden><p id="listNotice" role="status"></p><button id="retrySync" type="button">다시 시도</button></div>
         <div class="list-labels" aria-hidden="true"><span id="rankLabel">순위</span><span id="levelLabel">레벨 / 업로더</span><span id="verifierLabel">베리파이어</span></div>
         <ol id="demonRows" class="level-list" aria-label="1위부터 150위까지" aria-busy="true"></ol>
         <p id="emptyState" class="empty-state" role="status">데몬리스트를 불러오고 있습니다.</p>
       </div>
-      <aside id="levelDetail" class="level-detail" aria-label="선택한 레벨 정보" hidden></aside>
     </section>
     <noscript><p id="noScriptText">최신 데몬리스트를 불러오려면 JavaScript를 켜 주세요. <a href="https://pointercrate.com/demonlist/">Pointercrate에서 보기 ↗</a></p></noscript>
   </main>

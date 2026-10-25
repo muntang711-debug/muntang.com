@@ -21,7 +21,15 @@ export function canonicalLocation(url) {
   if (url.pathname === '/en' || url.pathname === '/en/index.html') return url.origin + '/en/' + url.search;
   if (['/mll/', '/mll/index.html', '/mll.html'].includes(url.pathname)) return url.origin + '/mll' + url.search;
   if (['/en/mll/', '/en/mll/index.html', '/en/mll.html'].includes(url.pathname)) return url.origin + '/en/mll' + url.search;
+  const clean = url.pathname.replace(/\/(?:index\.html)?$/, '');
+  if (clean !== url.pathname && parseMllRoute(clean)) return url.origin + clean + url.search;
   return null;
+}
+
+export function parseMllRoute(pathname) {
+  const match = pathname.match(/^(\/en)?\/mll(?:\/([1-9]\d{0,2}))?$/);
+  if (!match || (match[2] && Number(match[2]) > 150)) return null;
+  return {language: match[1] ? 'en' : 'ko', rank: match[2] ? Number(match[2]) : null};
 }
 
 export default {
@@ -58,7 +66,7 @@ export default {
         return withHeaders(new Response(xml), request, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
       }
       if (!env?.ASSETS) return withHeaders(new Response('Not Found', { status: 404 }), request);
-      const isMll = ['/mll', '/en/mll'].includes(url.pathname);
+      const isMll = parseMllRoute(url.pathname);
       const assetRequest = isMll ? new Request(new URL(url.pathname + '/', url), request) : request;
       let response = await env.ASSETS.fetch(assetRequest);
       if (response.status === 404) {
@@ -68,7 +76,7 @@ export default {
       const immutable = /^\/assets\/[a-z0-9.-]+\.[a-f0-9]{12}\.(?:js|css)$/.test(url.pathname);
       return withHeaders(response, request, {
         'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate',
-        ...((['/', '/en/', '/mll', '/en/mll'].includes(url.pathname)) ? { 'Content-Language': url.pathname.startsWith('/en/') ? 'en' : 'ko' } : {}),
+        ...((['/', '/en/'].includes(url.pathname) || isMll) ? { 'Content-Language': url.pathname.startsWith('/en/') ? 'en' : 'ko' } : {}),
         ...(url.hostname.endsWith('.workers.dev') ? { 'X-Robots-Tag': 'noindex' } : {}),
       });
     } catch (error) {
