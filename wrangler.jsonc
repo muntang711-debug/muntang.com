@@ -5,6 +5,8 @@
   "compatibility_date": "2026-10-24",
   "workers_dev": true,
   "upload_source_maps": true,
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "kv_namespaces": [{ "binding": "MLL_DATA" }],
   "observability": {
     "enabled": true
   },

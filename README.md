@@ -4,6 +4,7 @@
 
 - 한국어: https://muntang.com/
 - 영어: https://muntang.com/en/
+- MLL (Muntang Level List): https://muntang.com/mll
 - www와 HTTP 요청은 경로·쿼리를 유지하며 HTTPS 루트 도메인으로 이동합니다.
 
 ## 개발과 검증
@@ -47,6 +48,24 @@ npm run snapshot
 ```
 
 한국어·영어 페이지는 빌드 시 각각 생성됩니다. 영상 제목과 링크도 초기 HTML에 있으므로 JavaScript가 없어도 읽고 YouTube에서 열 수 있습니다. 구조·번역은 public/index.html과 lib/translations.js에서 수정합니다.
+
+## MLL 데몬리스트
+
+`/mll`은 Pointercrate의 데몬리스트 1~150위를 표시합니다. 한국어·영어 홈 메뉴에서 이동하며 레벨명, 업로더, 베리파이어, 레벨 ID 검색과 순위 범위 필터를 제공합니다. 레벨 선택 시 상세 정보와 외부 클리어 영상 링크를 표시합니다.
+
+`lib/demonlist.js`가 공식 `/api/v2/demons/listed/` API를 두 번만 조회합니다: `after=0&before=101&limit=100`, `after=100&before=151&limit=50`. 151위 이하는 조회·비교·저장하지 않습니다. 두 페이지의 완전성, 1~150위 연속성, 고유 레벨 ID를 검증한 뒤 전체 목록을 교체하고, 실패 시 기존 데이터를 보존합니다.
+
+Cron Trigger (`*/5 * * * *`)가 방문자 유무와 관계없이 5분마다 동기화해 `MLL_DATA` KV에 저장합니다. 순위·표시 정보가 같으면 `updatedAt`을 유지하고 `checkedAt`만 갱신합니다. `/api/mll`은 저장된 데이터만 읽습니다. 화면도 5분마다 자체 API를 다시 읽습니다. KV 전파에 따라 표시에는 추가 지연이 있을 수 있습니다.
+
+KV가 비어 있거나 장애가 나면 `data/demonlist.json`의 실제 확인 목록을 제공합니다. 오래된 목록은 마지막 확인 시간과 함께 구분합니다. 초기 HTML에도 저장된 150개 레벨이 포함됩니다. 초기 목록 갱신: `npm run snapshot:mll`.
+
+배포 시 Wrangler 자동 프로비저닝이 `MLL_DATA` KV를 생성하고 연결합니다. 기존 네임스페이스 재사용 시 `kv_namespaces`에 해당 `id`를 설정합니다. 개발은 로컬 KV를 사용하고 운영 동기화는 배포 후 시작됩니다. Cron 설정 전파에는 시간이 걸릴 수 있습니다.
+
+```sh
+npx wrangler dev --host localhost --test-scheduled
+curl "http://localhost:8787/cdn-cgi/local/scheduled?cron=*/5+*+*+*+*"
+curl http://localhost:8787/api/mll
+```
 
 ## 화면과 접근성
 

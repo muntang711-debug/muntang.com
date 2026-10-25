@@ -5,21 +5,22 @@ import { createHash } from 'node:crypto';
 import { build } from 'esbuild';
 import { parseHTML } from 'linkedom';
 import translations from '../lib/translations.js';
+import { renderRows, renderDetail } from '../public/mll-view.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.resolve(root, 'dist');
 if (path.dirname(dist) !== root || path.basename(dist) !== 'dist') throw new Error('Unsafe build directory');
 await fs.rm(dist, { recursive: true, force: true });
 await fs.mkdir(path.join(dist, 'assets'), { recursive: true });
-await fs.cp(path.join(root, 'public'), dist, { recursive: true, filter: source => !/\.(?:js|css)$/.test(source) && path.basename(source) !== 'index.html' });
+await fs.cp(path.join(root, 'public'), dist, { recursive: true, filter: source => !/\.(?:js|css)$/.test(source) && !['index.html', 'mll.html'].includes(path.basename(source)) });
 
 const outputs = {};
-for (const [name, entry] of Object.entries({ app: 'script.js', style: 'styles.css', language: 'language.js' })) {
+for (const [name, entry] of Object.entries({ app: 'script.js', style: 'styles.css', language: 'language.js', mll: 'mll.js', 'mll-style': 'mll.css' })) {
   const result = await build({ entryPoints: [path.join(root, 'public', entry)], bundle: true, minify: true, target: 'es2022', write: false, legalComments: 'inline', format: 'iife' });
   const content = result.outputFiles[0].contents;
   const ext = entry.endsWith('.css') ? 'css' : 'js';
   const hash = createHash('sha256').update(content).digest('hex').slice(0, 12);
-  const key = name === 'language' ? 'language' : ext;
+  const key = ['app', 'style'].includes(name) ? ext : name;
   outputs[key] = `/assets/${name}.${hash}.${ext}`;
   await fs.writeFile(path.join(dist, outputs[key]), content);
 }
@@ -80,5 +81,14 @@ for (const language of ['ko', 'en']) {
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, '<!doctype html>\n' + document.documentElement.outerHTML);
 }
+const { document: mll } = parseHTML(await fs.readFile(path.join(root, 'public/mll.html'), 'utf8'));
+const demonlist = JSON.parse(await fs.readFile(path.join(root, 'data/demonlist.json'), 'utf8'));
+mll.querySelector('link[href="/mll.css"]').href = outputs['mll-style'];
+mll.querySelector('script[src="/mll.js"]').src = outputs.mll;
+mll.querySelector('#demonRows').innerHTML = renderRows(demonlist.demons, demonlist.demons[0]?.id);
+mll.querySelector('#levelDetail').innerHTML = renderDetail(demonlist.demons[0]);
+mll.querySelector('#mllBootstrap').innerHTML = escape(JSON.stringify(demonlist));
+await fs.mkdir(path.join(dist, 'mll'), { recursive: true });
+await fs.writeFile(path.join(dist, 'mll/index.html'), '<!doctype html>\n' + mll.documentElement.outerHTML);
 await fs.writeFile(path.join(dist, 'asset-manifest.json'), JSON.stringify(outputs) + '\n');
-console.log('Built Korean and English pages with versioned JS/CSS:', outputs);
+console.log('Built Korean, English and MLL pages with versioned JS/CSS:', outputs);
