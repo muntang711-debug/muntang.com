@@ -90,7 +90,7 @@ for (const language of ['ko', 'en']) {
   const base = en ? '/en/mll' : '/mll', home = en ? '/en/' : '/';
   mll.documentElement.lang = language;
   // Reuse the actual home header and drawer, not a separately styled imitation.
-  mll.querySelector('#siteShell').outerHTML = ['.top-progress', '.header', '.drawer-backdrop', '.drawer'].map(selector => homeShell.querySelector(selector).outerHTML).join('');
+  mll.querySelector('#siteShell').outerHTML = ['.header', '.drawer-backdrop', '.drawer'].map(selector => homeShell.querySelector(selector).outerHTML).join('');
   const brand = mll.querySelector('.brand'); brand.innerHTML = 'MLL<span class="brand-dot">.</span>'; brand.href = base; brand.setAttribute('aria-label', text('MLL 홈', 'MLL home'));
   mll.querySelector('.nav-channel').remove();
   const toggle = mll.querySelector('#languageToggle');

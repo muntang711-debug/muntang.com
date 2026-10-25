@@ -18,7 +18,6 @@ function render(entering = false) {
   $('#emptyState').hidden = demons.length > 0;
   $('#emptyState').textContent = text('검색 결과가 없습니다. 다른 검색어를 입력해 주세요.', 'No matching levels. Try another search.');
   $('#resultCount').textContent = en ? `${demons.length} levels${search.value.trim() ? ' / 150' : ''}` : `${demons.length}개 레벨${search.value.trim() ? ' / 150' : ''}`;
-  shell.progress();
 }
 search.addEventListener('input', () => render());
 function notice(message = '', retry = false) {

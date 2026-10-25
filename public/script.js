@@ -91,8 +91,6 @@ function updateScroll() {
   storyPending = true;
   requestAnimationFrame(() => {
     storyPending = false;
-    const range = document.documentElement.scrollHeight - innerHeight;
-    $('#progressBar').style.transform = `scaleX(${range > 0 ? scrollY / range : 0})`;
     fitStory();
   });
 }

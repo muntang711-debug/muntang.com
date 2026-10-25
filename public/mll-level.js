@@ -24,7 +24,6 @@ async function refresh() {
     }
     $('#levelStatus').textContent = data.status === 'stale' ? (en ? 'Updates are delayed. Showing the last verified ranking.' : '최근 갱신이 지연되어 마지막으로 확인한 순위를 표시합니다.') : '';
     $('#retryLevel').hidden = true;
-    shell.progress();
   } catch {
     $('#levelStatus').textContent = en ? 'Could not refresh level information. Please try again.' : '레벨 정보를 불러오지 못했습니다. 다시 시도해 주세요.';
     $('#retryLevel').hidden = false;

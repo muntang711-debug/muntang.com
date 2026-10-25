@@ -45,17 +45,5 @@ export function initMllShell(language = 'ko') {
   }
   setLdm(ldm);
   $('#ldmToggle').addEventListener('click', () => setLdm(!ldm));
-  let pending = false;
-  function progress() {
-    if (pending) return;
-    pending = true;
-    requestAnimationFrame(() => {
-      const distance = document.documentElement.scrollHeight - innerHeight;
-      $('#progressBar').style.transform = `scaleX(${distance > 0 ? scrollY / distance : 0})`;
-      pending = false;
-    });
-  }
-  window.addEventListener('scroll', progress, { passive: true });
-  window.addEventListener('resize', progress, { passive: true });
-  return { progress, motionEnabled: () => !ldm && !matchMedia('(prefers-reduced-motion: reduce)').matches };
+  return { motionEnabled: () => !ldm && !matchMedia('(prefers-reduced-motion: reduce)').matches };
 }
