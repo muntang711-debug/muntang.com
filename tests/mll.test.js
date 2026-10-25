@@ -147,7 +147,7 @@ test('MLL canonical path resolves without a slash redirect loop', async () => {
 test('search highlights every matching field and external links use rank, never internal ID', () => {
   assert.equal(filterDemons(saved.demons, '').length, 150);
   const demon = saved.demons[0];
-  for (const query of [demon.name.toLowerCase(), demon.publisher.name, demon.verifier.name, String(demon.level_id)]) assert.ok(filterDemons(saved.demons, query).some(row => row.id === demon.id));
+  for (const query of [demon.name.toLowerCase(), demon.publisher.name, String(demon.level_id)]) assert.ok(filterDemons(saved.demons, query).some(row => row.id === demon.id));
   assert.equal(filterDemons(saved.demons, 'no such level 1234').length, 0);
   const unsafe = { ...demon, name: '<script>alert(1)</script>' };
   assert.doesNotMatch(renderRows([unsafe], unsafe.id), /<script>/); assert.doesNotMatch(renderDetail(unsafe), /<script>/);
@@ -155,6 +155,8 @@ test('search highlights every matching field and external links use rank, never 
   assert.match(renderRows([demon],null,'','en'), /href="\/en\/mll\/1"/);
   assert.doesNotMatch(renderRows([demon],null), /<button/);
   const {document:rowDocument}=parseHTML('<ol>'+renderRows([demon],null)+'</ol>');
+  assert.equal(rowDocument.querySelector('.level-verifier'),null);
+  assert.equal(filterDemons(saved.demons,demon.verifier.name).length,0);
   assert.equal(rowDocument.querySelector('.level-select').firstElementChild.className,'level-thumbnail');
   assert.equal(rowDocument.querySelector('.level-thumbnail img').getAttribute('src'),'https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg');
   assert.equal(rowDocument.querySelector('.level-thumbnail img').getAttribute('loading'),'lazy');
@@ -200,7 +202,9 @@ test('MLL reuses the home header/drawer, has separate bilingual routes and embed
     assert.ok(document.querySelector('#lastChecked'));
     assert.equal(document.querySelectorAll('.drawer-link small').length,0);
     assert.equal(document.querySelector('.return-home'),null);
-    assert.equal(document.querySelector('.brand').getAttribute('href'), language === 'en' ? '/en/mll' : '/mll');
+    assert.equal(document.querySelector('.brand').getAttribute('href'), language === 'en' ? '/en/' : '/');
+    assert.equal(document.querySelector('.brand').textContent, language === 'en' ? 'Muntang.com' : '문탕닷컴.');
+    assert.equal(document.querySelector('#verifierLabel'), null);
     assert.equal(document.querySelector('#languageToggle').getAttribute('href'), language === 'en' ? '/mll' : '/en/mll');
     assert.equal(document.querySelector('link[rel=canonical]').getAttribute('href'), 'https://muntang.com' + (language === 'en' ? '/en/mll' : '/mll'));
     assert.equal(document.querySelector('.header').className, home.querySelector('.header').className);
@@ -228,7 +232,8 @@ test('standalone rank pages have their own URL, language switch and no ranking s
     assert.ok(document.querySelector('article#levelDetail'));
     assert.equal(document.querySelector('#demonRows'),null);
     assert.equal(document.querySelector('#lastChecked'),null);
-    assert.equal(document.querySelector('main').firstElementChild.className,'level-pagination');
+    assert.equal(document.querySelector('main').firstElementChild.className,'level-page-tools');
+    assert.equal(document.querySelector('.back-to-list').getAttribute('href'),base);
     assert.equal(document.querySelector('#previousLevel').hasAttribute('hidden'),rank===1);
     assert.equal(document.querySelector('#nextLevel').hasAttribute('hidden'),rank===150);
     const src=document.querySelector('script[defer]').getAttribute('src'); assert.match(src,/mll-level\./);

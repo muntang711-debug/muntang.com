@@ -4,7 +4,7 @@
 .brand:has(>.domain-dot){display:inline-block}
 .drawer .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:68px;padding:0 0 19px}
 .drawer .drawer-head .menu-trigger{position:static;inset:auto;flex:0 0 48px;width:48px;height:48px;margin:0;transform:none}
-.drawer .drawer-category .drawer-category-link{min-height:62px;padding:10px 12px;align-items:center;transition:background .2s,color .2s}
+.drawer .drawer-category .drawer-category-link{min-height:62px;padding:10px 12px;align-items:center;transition:opacity .45s,transform .55s cubic-bezier(.2,.8,.2,1),background .2s,color .2s}
 .drawer .drawer-category-link::before{display:none}
 .drawer .drawer-category-link:hover{background:rgba(255,121,0,.1)}
 .drawer .drawer-category-link>span{display:inline-block;line-height:1.2;transform:none}
@@ -35,7 +35,7 @@
     .wrap{width:min(var(--content),calc(100% - 88px));margin-inline:auto}
     .top-progress{position:fixed;z-index:90;left:0;top:0;width:100%;height:3px;pointer-events:none}
     .top-progress span{display:block;width:100%;height:100%;background:linear-gradient(90deg,var(--orange),#ffd09a);transform:scaleX(0);transform-origin:left}
-    .header{position:fixed;z-index:40;left:0;right:0;top:3px;height:82px;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(9,9,9,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+    .header{position:fixed;z-index:40;left:0;right:0;top:0;height:82px;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(9,9,9,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
     .nav{height:100%;display:flex;align-items:center;justify-content:space-between}
     .brand{display:inline-flex;align-items:baseline;gap:2px;font-size:25px;font-weight:950;letter-spacing:-.1em}
     
@@ -552,7 +552,7 @@
     .top-progress{top:0;height:5px;background:rgba(246,239,227,.09);border-bottom:1px solid rgba(255,255,255,.11);backdrop-filter:blur(14px) saturate(150%);-webkit-backdrop-filter:blur(14px) saturate(150%);box-shadow:0 2px 14px rgba(0,0,0,.12);overflow:hidden}
     .top-progress:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.26),transparent);pointer-events:none}
     .top-progress span{box-shadow:0 0 12px rgba(255,119,0,.48),0 0 3px rgba(255,220,180,.72)}
-    .header{top:5px;height:80px;background:rgba(12,12,11,.58);border-bottom:1px solid rgba(255,255,255,.14);backdrop-filter:blur(24px) saturate(155%);-webkit-backdrop-filter:blur(24px) saturate(155%);box-shadow:0 8px 32px rgba(0,0,0,.10)}
+    .header{top:0;height:80px;background:rgba(12,12,11,.58);border-bottom:1px solid rgba(255,255,255,.14);backdrop-filter:blur(24px) saturate(155%);-webkit-backdrop-filter:blur(24px) saturate(155%);box-shadow:0 8px 32px rgba(0,0,0,.10)}
     .menu-trigger{background:rgba(24,22,18,.46);border-color:rgba(255,255,255,.27);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);box-shadow:0 8px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.15);border-radius:12px}
     .menu-trigger:hover{background:rgba(255,121,0,.14);border-color:rgba(255,166,90,.78)}
     .nav-channel{padding:9px 13px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.055);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
@@ -579,16 +579,16 @@
     .hero-handoff-flight .float-info{padding:15px 9px 9px!important;font-size:12px!important;line-height:1.45!important;transition:opacity .18s ease,transform .22s ease,padding .82s cubic-bezier(.2,.8,.2,1),font-size .82s cubic-bezier(.2,.8,.2,1),line-height .82s cubic-bezier(.2,.8,.2,1)}
     .hero-handoff-flight .float-orb{opacity:0!important;transition:opacity .2s ease}
     .hero-handoff-flight .feature-image{border-radius:2px}
-    @media(max-width:760px){.header{top:5px;height:74px}.hero-index{right:0;bottom:5%;padding:6px 8px;gap:7px}.hero-index i{width:24px}.feature-card,.float-card{backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%)}}
+    @media(max-width:760px){.header{top:0;height:74px}.hero-index{right:0;bottom:5%;padding:6px 8px;gap:7px}.hero-index i{width:24px}.feature-card,.float-card{backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%)}}
     @media(prefers-reduced-motion:reduce){.hero-ui-enter,.hero-preview-enter{filter:none!important;transition:none!important;opacity:1!important;transform:none!important}}
 
 
     /* Navigation controls share one visual centerline. */
-    .menu-trigger{top:19.5px;right:max(28px,calc((100vw - 1320px)/2));}
+    .menu-trigger{top:14.5px;right:max(28px,calc((100vw - 1320px)/2));}
     .nav-right{align-items:center}
     .nav-channel{align-self:center;display:inline-flex;align-items:center;justify-content:center}
     .nav-channel svg{display:block;width:17px;height:17px}
-    @media(max-width:760px){.menu-trigger{top:20px;right:18px;width:44px;height:44px}.header{top:5px;height:74px}}
+    @media(max-width:760px){.menu-trigger{top:15px;right:18px;width:44px;height:44px}.header{top:0;height:74px}}
     .drawer-menu-title{display:flex;align-items:baseline;gap:1px;color:var(--white);font-size:25px;line-height:1;font-weight:950;letter-spacing:-.085em}
     .drawer-menu-title .brand-dot{font-size:inherit;line-height:inherit}
     .drawer-ldm-wrap{padding:18px 0 4px}
@@ -1034,3 +1034,7 @@ html.video-modal-open,body.video-modal-open{overflow:hidden}
 .video-live-dot{width:5px;height:5px;flex:none;border-radius:50%;background:var(--orange)}
 #ldmSuggestionEnable,#ldmSuggestionDismiss{min-height:44px}
 @media(max-width:480px){.ldm-suggestion{flex-wrap:wrap}.ldm-suggestion-copy{flex-basis:calc(100% - 32px)}.ldm-suggestion-icon{display:flex}#ldmSuggestionEnable{margin-left:auto}.video-dialog-screen{max-height:calc(100dvh - 190px)}}
+
+/* Both menu sections use the same entrance motion, including their headings. */
+.drawer .site-menu-groups .drawer-stagger{transition:opacity .45s,transform .55s cubic-bezier(.2,.8,.2,1),background .2s,color .2s;transition-delay:0s}
+.drawer.is-open .site-menu-groups .drawer-stagger{transition-delay:var(--menu-delay,.14s)}

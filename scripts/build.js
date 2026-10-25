@@ -91,7 +91,7 @@ for (const language of ['ko', 'en']) {
   mll.documentElement.lang = language;
   // Reuse the actual home header and drawer, not a separately styled imitation.
   mll.querySelector('#siteShell').outerHTML = ['.header', '.drawer-backdrop', '.drawer'].map(selector => homeShell.querySelector(selector).outerHTML).join('');
-  const brand = mll.querySelector('.brand'); brand.innerHTML = 'MLL<span class="brand-dot">.</span>'; brand.href = base; brand.setAttribute('aria-label', text('MLL 홈', 'MLL home'));
+  const brand = mll.querySelector('.brand'); brand.innerHTML = en ? 'Muntang<span class="domain-dot">.</span>com' : '문탕닷컴<span class="brand-dot">.</span>'; brand.href = home; brand.setAttribute('aria-label', text('문탕닷컴 홈', 'Muntang.com home'));
   mll.querySelector('.nav-channel').remove();
   const toggle = mll.querySelector('#languageToggle');
   toggle.textContent = en ? 'KO' : 'EN'; toggle.href = en ? '/mll' : '/en/mll'; toggle.setAttribute('lang', en ? 'ko' : 'en'); toggle.setAttribute('aria-label', en ? '한국어로 전환' : 'Switch site language to English');
@@ -110,7 +110,7 @@ for (const language of ['ko', 'en']) {
   mll.querySelector('script[src="/mll.js"]').src = outputs.mll;
   mll.querySelector('script[src="/language.js"]').src = outputs.language;
   if (en) {
-    const strings = { listDescription:'Pointercrate Demonlist #1–150', originalListText:'Original list', resultCount:'Loading…', searchLabel:'Search level, publisher, verifier or ID', retrySync:'Try again', rankLabel:'Video', levelLabel:'Rank / Level / Publisher', verifierLabel:'Verifier', emptyState:'Loading the demonlist…', mainSiteLink:'Muntang.com ↗', dataCredit:'Rankings: Pointercrate ↗' };
+    const strings = { listDescription:'Pointercrate Demonlist #1–150', originalListText:'Original list', resultCount:'Loading…', searchLabel:'Search level, publisher or ID', retrySync:'Try again', rankLabel:'Video', levelLabel:'Rank / Level / Publisher', emptyState:'Loading the demonlist…', mainSiteLink:'Muntang.com ↗', dataCredit:'Rankings: Pointercrate ↗' };
     for (const [id, value] of Object.entries(strings)) mll.getElementById(id).textContent = value;
     mll.querySelector('#levelSearch').placeholder = 'Search levels';
     mll.querySelector('.skip-link').textContent = 'Skip to demonlist';
@@ -128,7 +128,7 @@ for (const language of ['ko', 'en']) {
     const route = base + '/' + rank;
     level.body.dataset.rank = String(rank);
     level.body.classList.add('mll-level-page');
-    level.querySelector('main').innerHTML = `<nav class="level-pagination" aria-label="${text('레벨 이동', 'Level navigation')}"><a id="previousLevel" href="${base}/${rank-1}">← ${text('이전 순위', 'Previous rank')}</a><a href="${base}">${text('목록', 'Demonlist')}</a><a id="nextLevel" href="${base}/${rank+1}">${text('다음 순위', 'Next rank')} →</a></nav><article id="levelDetail" class="standalone-detail"><h1>${text('불러오는 중…', 'Loading…')}</h1></article><p id="levelStatus" role="status"></p><button id="retryLevel" class="retry-level" type="button" hidden>${text('다시 시도', 'Try again')}</button>`;
+    level.querySelector('main').innerHTML = `<div class="level-page-tools"><a class="back-to-list" href="${base}">← ${text('MLL로 돌아가기', 'Back to MLL')}</a><nav class="level-pagination" aria-label="${text('레벨 이동', 'Level navigation')}"><a id="previousLevel" href="${base}/${rank-1}">← ${text('이전 순위', 'Previous rank')}</a><a href="${base}">${text('목록', 'Demonlist')}</a><a id="nextLevel" href="${base}/${rank+1}">${text('다음 순위', 'Next rank')} →</a></nav></div><article id="levelDetail" class="standalone-detail"><h1>${text('불러오는 중…', 'Loading…')}</h1></article><p id="levelStatus" role="status"></p><button id="retryLevel" class="retry-level" type="button" hidden>${text('다시 시도', 'Try again')}</button>`;
     if (rank === 1) level.querySelector('#previousLevel').hidden = true;
     if (rank === 150) level.querySelector('#nextLevel').hidden = true;
     level.querySelector('.skip-link').href = '#levelDetail';

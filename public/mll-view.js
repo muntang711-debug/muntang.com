@@ -31,7 +31,7 @@ export function youtubeId(value) {
 
 export function filterDemons(demons, query = '') {
   const search = query.trim().toLowerCase();
-  return demons.filter(demon => !search || [demon.name, demon.publisher.name, demon.verifier.name, demon.level_id, '#' + demon.position]
+  return demons.filter(demon => !search || [demon.name, demon.publisher.name, demon.level_id, '#' + demon.position]
     .some(value => String(value ?? '').toLowerCase().includes(search)));
 }
 
@@ -42,7 +42,7 @@ export function renderRows(demons, selectedId, query = '', language = 'ko') {
     const video = youtubeId(demon.video);
     const thumbnail = video ? `<img src="https://i.ytimg.com/vi/${video}/hqdefault.jpg" alt="" width="480" height="270" loading="lazy" decoding="async">` : '';
     return `<li class="level-row${demon.id === selectedId ? ' is-selected' : ''}" style="--row-delay:${Math.min(index, 9) * 24}ms">
-      <a class="level-select" href="${language === 'en' ? '/en/mll' : '/mll'}/${demon.position}" aria-label="${escapeHtml(t.select + ': ' + demon.name)}"><span class="level-thumbnail">${thumbnail}</span><span class="level-copy"><strong><span class="level-rank">${highlight('#' + demon.position, query)}</span><span class="level-name">${highlight(demon.name, query)}</span></strong><span class="level-publisher">${highlight(demon.publisher.name, query)}${idMatch ? `<span class="level-match">ID ${highlight(demon.level_id, query)}</span>` : ''}</span></span><span class="level-verifier">${highlight(demon.verifier.name, query)}</span></a>
+      <a class="level-select" href="${language === 'en' ? '/en/mll' : '/mll'}/${demon.position}" aria-label="${escapeHtml(t.select + ': ' + demon.name)}"><span class="level-thumbnail">${thumbnail}</span><span class="level-copy"><strong><span class="level-rank">${highlight('#' + demon.position, query)}</span><span class="level-name">${highlight(demon.name, query)}</span></strong><span class="level-publisher">${highlight(demon.publisher.name, query)}${idMatch ? `<span class="level-match">ID ${highlight(demon.level_id, query)}</span>` : ''}</span></span></a>
       <a class="level-external" href="${pointercrateUrl(demon)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(t.external + ': #' + demon.position + ' ' + demon.name)}" title="${escapeHtml(t.external)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 17 17 7M6 7h11v11"/></svg></a></li>`;
   }).join('');
 }
