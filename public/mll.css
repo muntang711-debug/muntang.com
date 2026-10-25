@@ -37,8 +37,8 @@
 /* Navigation and all map information fit above the fold on ordinary PCs. */
 .mll-level-page .mll-main{padding-top:102px;padding-bottom:24px;min-height:0}
 .mll-level-page .level-page-tools{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:0 0 18px}
-.mll-level-page .back-to-list{display:inline-flex;align-items:center;min-height:44px;color:var(--orange);font-size:16px;white-space:nowrap;transition:color .2s}
-.mll-level-page .back-to-list:hover{color:var(--white)}
+.mll-level-page .back-to-list{display:inline-flex;align-items:center;min-height:44px;color:#c8beb0;font-size:16px;white-space:nowrap;transition:color .2s}
+.mll-level-page .back-to-list:hover,.mll-level-page .back-to-list:focus-visible{color:var(--orange)}
 .mll-level-page .level-pagination{margin:0;padding:0;border:0;gap:26px}
 .mll-level-page .standalone-detail{grid-template-columns:minmax(0,1.8fr) minmax(260px,1fr);gap:18px 30px}
 .mll-level-page .standalone-detail .detail-title{margin:0;padding:0}
