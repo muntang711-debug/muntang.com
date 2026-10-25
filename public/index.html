@@ -247,7 +247,32 @@
     </section>
   </main>
   <footer class="footer"><div class="footer-inner wrap"><a href="#top" class="footer-brand">문탕닷컴<span class="brand-dot">.</span></a><div class="footer-right"><a href="#top">맨 위로 ↑</a><a href="#videos">전체 영상</a><a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" target="_blank" rel="noopener noreferrer">유튜브 ↗</a></div></div></footer>
-  <div class="ldm-suggestion" id="ldmSuggestion" role="status" aria-live="polite" hidden><div class="ldm-suggestion-copy"><strong id="ldmSuggestionTitle">프레임 속도가 낮아요.</strong><span id="ldmSuggestionDetail">LDM을 켤까요?</span></div><button type="button" id="ldmSuggestionEnable">지금 켜기</button><button type="button" id="ldmSuggestionDismiss">나중에</button></div>
+  <div class="video-modal" id="videoModal" hidden aria-hidden="true">
+    <div class="video-modal-backdrop" data-modal-dismiss></div>
+    <section class="video-dialog" id="videoDialog" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle" tabindex="-1">
+      <div class="video-dialog-orbits" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+      <header class="video-dialog-header">
+        <div class="video-modal-mark">문탕닷컴<span class="brand-dot">.</span><span>PLAYER</span></div>
+        <div class="video-dialog-actions">
+          <a href="https://www.youtube.com/@%EB%AC%B8%ED%83%95%EC%9D%B4" id="videoModalExternal" target="_blank" rel="noopener noreferrer">유튜브 <b>↗</b></a>
+          <button type="button" id="videoModalClose" class="video-dialog-close" aria-label="영상 창 닫기">×</button>
+        </div>
+      </header>
+      <div class="video-dialog-content">
+        <div class="video-dialog-title-row"><span class="video-live-dot"></span><h2 id="videoModalTitle">유튜브 영상</h2></div>
+        <div class="video-dialog-screen">
+          <div class="video-screen-glow" aria-hidden="true"><i></i><b></b></div>
+          <iframe id="videoModalFrame" title="유튜브 영상 플레이어" src="about:blank" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="ldm-suggestion" id="ldmSuggestion" role="status" aria-live="polite" hidden>
+    <span class="ldm-suggestion-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+    <div class="ldm-suggestion-copy"><strong id="ldmSuggestionTitle">프레임 속도가 낮아요.</strong><span id="ldmSuggestionDetail">LDM을 켤까요?</span></div>
+    <button type="button" id="ldmSuggestionEnable">지금 켜기</button>
+    <button type="button" id="ldmSuggestionDismiss" aria-label="알림 닫기">나중에</button>
+  </div>
   <span id="playerStatus" class="sr-only" role="status" aria-live="polite"></span>
   <template id="videoBootstrap"></template>
 

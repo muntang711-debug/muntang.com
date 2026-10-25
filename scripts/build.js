@@ -37,6 +37,11 @@ for (const language of ['ko', 'en']) {
       const value = entry.en?.[index];
       if (value !== undefined) { if (entry.a) node.setAttribute(entry.a, value); else node.innerHTML = value; }
     });
+    document.querySelector('#videoModalExternal').innerHTML = 'YouTube <b>↗</b>';
+    document.querySelector('#videoModalClose').setAttribute('aria-label', 'Close video player');
+    document.querySelector('#videoModalTitle').textContent = 'YouTube video';
+    document.querySelector('#videoModalFrame').setAttribute('title', 'YouTube video player');
+    document.querySelector('#ldmSuggestionDismiss').setAttribute('aria-label', 'Dismiss suggestion');
     document.querySelector('#ldmSuggestionTitle').textContent = 'Frame rate is low.';
     document.querySelector('#ldmSuggestionDetail').textContent = 'Enable LDM?';
     document.querySelector('#ldmSuggestionEnable').textContent = 'Enable now';

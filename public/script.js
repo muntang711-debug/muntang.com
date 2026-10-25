@@ -118,84 +118,89 @@ function thumbnail(image, video) {
 
 const grid = $('#videoGrid'), search = $('#videoSearch'), status = $('#archiveStatus'), loadButton = $('#loadMore');
 let videos = [], tokens = { videos: '', shorts: '' }, complete = { videos: false, shorts: false };
-let filter = 'all', loading = false, loadError = false, catalogStatus = 'stale', activeInlineFrame = null, activeVideoId = '';
+let filter = 'all', loading = false, loadError = false, catalogStatus = 'stale', modalOpen = false, activeVideoId = '';
 let heroVideos = [], carouselIndex = 0, heroInView = true, heroFocused = false, userPaused = false;
 try { const node = $('#videoBootstrap'); const data = JSON.parse(node.content.textContent || node.textContent); videos = mergeVideos([], data.videos); } catch { /* The static links remain available if bootstrap fails. */ }
 
-function closePlayer({ restoreFocus = true } = {}) {
-  if (!activeInlineFrame) return;
-  const frame = activeInlineFrame;
-  frame.replaceChildren(...frame._originalNodes);
-  delete frame._originalNodes;
-  frame.classList.remove('inline-playing');
-  frame.setAttribute('role', 'button'); frame.tabIndex = 0;
-  frame.setAttribute('aria-label', frame.dataset.videoTitle + ' — ' + text('페이지 안에서 재생', 'Play on this page'));
-  activeInlineFrame = null; activeVideoId = '';
-  document.body.classList.remove('video-playing');
+const videoModal = $('#videoModal'), videoFrame = $('#videoModalFrame'), modalClose = $('#videoModalClose');
+let modalReturnFocus, modalCloseTimer = 0, modalBackground = [];
+function closePlayer() {
+  if (!modalOpen) return;
+  modalOpen = false;
+  videoModal.classList.remove('is-open');
+  videoFrame.src = 'about:blank';
+  document.body.classList.remove('video-playing', 'video-modal-open');
+  document.documentElement.classList.remove('video-modal-open');
+  for (const [node, wasInert] of modalBackground) node.inert = wasInert;
+  modalBackground = [];
+  const fallback = $$('[data-id]', grid).find(node => node.dataset.id === activeVideoId)?.querySelector('.video-frame');
+  const returnTo = modalReturnFocus?.isConnected ? modalReturnFocus : fallback;
+  returnTo?.focus({ preventScroll: true });
+  modalReturnFocus = null;
+  videoModal.setAttribute('aria-hidden', 'true');
+  clearTimeout(modalCloseTimer);
+  modalCloseTimer = setTimeout(() => { videoModal.hidden = true; }, reduced || ldmEnabled ? 0 : 360);
   window.dispatchEvent(new Event('scene-visibilitychange'));
-  if (restoreFocus && frame.isConnected) frame.focus({ preventScroll: true });
   announce(text('영상을 닫았습니다.', 'Video closed.'));
   syncCarousel();
 }
-function openPlayer(frame, video) {
-  if (activeVideoId === video.id && activeInlineFrame === frame) return;
-  closePlayer({ restoreFocus: false });
-  frame._originalNodes = [...frame.childNodes];
-  frame.classList.add('inline-playing'); frame.setAttribute('role', 'region'); frame.tabIndex = -1;
-  frame.setAttribute('aria-label', video.title);
-  const iframe = document.createElement('iframe');
-  iframe.src = `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0&playsinline=1&controls=1`;
-  iframe.title = video.title + text(' 플레이어', ' player');
-  iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-  iframe.allowFullscreen = true;
-  iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-  const close = create('button', 'inline-player-close', '×'); close.type = 'button'; close.setAttribute('aria-label', text('영상 닫기', 'Close video'));
-  close.addEventListener('click', event => { event.stopPropagation(); closePlayer(); });
-  frame.replaceChildren(iframe, close);
-  activeInlineFrame = frame; activeVideoId = video.id;
-  document.body.classList.add('video-playing');
+function openPlayer(card, video) {
+  if (!/^[A-Za-z0-9_-]{11}$/.test(video.id)) return;
+  if (heroTransitionBusy) settleHeroTransition();
+  clearTimeout(modalCloseTimer);
+  if (!modalOpen) {
+    modalReturnFocus = card;
+    modalBackground = [...background, trigger, drawer, backdrop].map(node => [node, node.inert]);
+    for (const [node] of modalBackground) node.inert = true;
+  }
+  modalOpen = true; activeVideoId = video.id;
+  $('#ldmSuggestion').hidden = true;
+  $('#videoModalTitle').textContent = video.title;
+  $('#videoModalExternal').href = video.url || 'https://www.youtube.com/watch?v=' + video.id;
+  videoFrame.title = video.title + text(' 플레이어', ' player');
+  videoFrame.src = 'https://www.youtube-nocookie.com/embed/' + video.id + '?autoplay=1&rel=0&playsinline=1&controls=1';
+  videoModal.hidden = false;
+  videoModal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('video-playing', 'video-modal-open');
+  document.documentElement.classList.add('video-modal-open');
   window.dispatchEvent(new Event('scene-visibilitychange'));
-  close.focus({ preventScroll: true });
-  announce(video.title + text(' 재생. 닫기 버튼으로 돌아갈 수 있습니다.', ' playing. Use Close video to return.'));
+  requestAnimationFrame(() => { if (modalOpen) { videoModal.classList.add('is-open'); modalClose.focus({ preventScroll: true }); } });
+  announce(video.title + text(' 재생. Escape로 닫을 수 있습니다.', ' playing. Press Escape to close.'));
   syncCarousel();
 }
+modalClose.addEventListener('click', closePlayer);
+videoModal.addEventListener('click', event => { if (event.target === videoModal || event.target.closest('[data-modal-dismiss]')) closePlayer(); });
+document.addEventListener('keydown', event => {
+  if (!modalOpen) return;
+  if (event.key === 'Escape') { event.preventDefault(); closePlayer(); return; }
+  if (event.key === 'Tab') {
+    const items = $$('a[href],button:not(:disabled),iframe', videoModal);
+    const first = items[0], last = items.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+});
 function makeCard(video, index) {
   const card = create('article', 'video-card is-visible'), frame = create('div', 'video-frame');
   card.dataset.id = video.id; frame.dataset.videoTitle = video.title;
   frame.setAttribute('role', 'button'); frame.tabIndex = 0;
-  frame.setAttribute('aria-label', video.title + ' — ' + text('페이지 안에서 재생', 'Play on this page'));
+  frame.setAttribute('aria-label', video.title + ' — ' + text('팝업에서 재생', 'Play in popup'));
   const image = document.createElement('img'); thumbnail(image, video); image.loading = 'lazy'; image.width = 480; image.height = 360;
   frame.append(image, create('span', 'video-index', String(index + 1).padStart(2, '0')), create('span', 'video-kind', video.type === 'short' ? text('쇼츠', 'SHORTS') : text('동영상', 'VIDEO')), create('span', 'video-play', '▶'));
-  frame.addEventListener('click', () => { if (!frame.classList.contains('inline-playing')) openPlayer(frame, video); });
+  frame.addEventListener('click', () => { openPlayer(frame, video); });
   frame.addEventListener('keydown', event => { if (event.target === frame && ['Enter', ' '].includes(event.key)) { event.preventDefault(); openPlayer(frame, video); } });
   const copy = create('div', 'video-card-text'), title = create('div', 'video-card-title', video.title);
   const date = formatDate(video, language); if (date) title.appendChild(create('span', 'video-card-date', date));
+  card.addEventListener('click', event => { if (!event.target.closest('.video-frame,a')) openPlayer(frame, video); });
   const link = create('a', 'video-card-arrow', '↗'); link.href = video.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.setAttribute('aria-label', video.title + ' — ' + text('유튜브에서 열기', 'Open on YouTube'));
   copy.append(title, link); card.append(frame, copy); return card;
 }
 function renderVideos() {
   const matches = filterVideos(videos, filter, search.value);
-  // Reuse the playing card when it remains in the current result set.
-  const retained = activeInlineFrame?.closest('.video-card');
-  const preserve = retained && matches.some(video => video.id === activeVideoId);
-  const focusWasPlaying = activeInlineFrame?.contains(document.activeElement);
-  if (retained && !preserve) closePlayer({ restoreFocus: false });
-  if (preserve) {
-    // Moving an iframe through a fragment reloads its browsing context. Leave it attached.
-    for (const child of [...grid.childNodes]) if (child !== retained) child.remove();
-    let afterPlayer = false;
-    matches.forEach((video, index) => {
-      if (video.id === activeVideoId) { afterPlayer = true; return; }
-      const card = makeCard(video, index);
-      if (afterPlayer) grid.appendChild(card); else grid.insertBefore(card, retained);
-    });
-  } else {
-    const fragment = document.createDocumentFragment();
-    matches.forEach((video, index) => fragment.appendChild(makeCard(video, index)));
-    if (!matches.length) fragment.appendChild(create('div', 'video-empty', text('불러온 영상에서 검색 결과가 없습니다.', 'No matches among the loaded videos.')));
-    grid.replaceChildren(fragment);
-  }
-  if (focusWasPlaying && !preserve) search.focus({ preventScroll: true });
+  const fragment = document.createDocumentFragment();
+  matches.forEach((video, index) => fragment.appendChild(makeCard(video, index)));
+  if (!matches.length) fragment.appendChild(create('div', 'video-empty', text('불러온 영상에서 검색 결과가 없습니다.', 'No matches among the loaded videos.')));
+  grid.replaceChildren(fragment);
   $('#videoCount').textContent = String(matches.length).padStart(2, '0');
   $('#videoCountSuffix').textContent = text('개 영상', 'videos');
   status.textContent = loadError ? text('불러오지 못했습니다. 다시 시도해 주세요.', 'Could not update. Please try again.') : '';
@@ -320,7 +325,7 @@ function paintHero() {
 }
 function advanceHero(direction = 1, manual = false){
   if(heroTransitionBusy||heroVideos.length<2||document.visibilityState==='hidden')return false;
-  if(activeInlineFrame)return false;
+  if(modalOpen)return false;
   var main=$('#heroVideo'),small=$('#heroPeek');
   if(!main||!small)return false;
   var nextIndex=(carouselIndex+direction+heroVideos.length)%heroVideos.length;
@@ -414,6 +419,10 @@ function retreatHero(main, small, origin, target, previousVideo, currentVideo) {
   // Keep the current image on the same node as it travels back to the preview slot.
   const rotation = getComputedStyle(main).transform;
   const previewRotation = getComputedStyle(small).transform;
+  const previewStyle = getComputedStyle(small);
+  const scaleX = target.width / origin.width, scaleY = target.height / origin.height;
+  const padding = [previewStyle.paddingTop, previewStyle.paddingRight, previewStyle.paddingBottom, previewStyle.paddingLeft]
+    .map((value, index) => parseFloat(value) / (index % 2 ? scaleX : scaleY) + 'px').join(' ');
   Object.assign(main.style, {
     left: origin.left + 'px', top: origin.top + 'px', right: 'auto', bottom: 'auto',
     width: origin.width + 'px', height: origin.height + 'px', margin: '0',
@@ -424,13 +433,13 @@ function retreatHero(main, small, origin, target, previousVideo, currentVideo) {
   small.style.transition = 'opacity .24s ease';
   small.style.pointerEvents = 'none';
   void main.offsetWidth;
-  main.style.transition = 'left .82s cubic-bezier(.2,.8,.2,1),top .82s cubic-bezier(.2,.8,.2,1),transform .82s cubic-bezier(.2,.8,.2,1)';
+  main.style.transition = 'left .82s cubic-bezier(.2,.8,.2,1),top .82s cubic-bezier(.2,.8,.2,1),transform .82s cubic-bezier(.2,.8,.2,1),padding .82s cubic-bezier(.2,.8,.2,1)';
   transitionFrame = requestAnimationFrame(() => {
     // Scale the entire card, including its text and controls, without reflowing the title.
     Object.assign(main.style, {
       left: target.left - (origin.width - target.width) / 2 + 'px',
       top: target.top - (origin.height - target.height) / 2 + 'px',
-      transform: previewRotation + ` scale(${target.width / origin.width},${target.height / origin.height})`,
+      transform: previewRotation + ` scale(${scaleX},${scaleY})`, padding,
     });
     small.style.opacity = '0';
   });
@@ -441,6 +450,14 @@ function retreatHero(main, small, origin, target, previousVideo, currentVideo) {
     transitionFrame = requestAnimationFrame(() => { small.style.opacity = '1'; });
   }, 320);
   scheduleHeroTransitionTimeout(() => {
+    for (const node of $$('.feature-info,.feature-play', main)) {
+      node.style.transition = 'opacity .18s ease,transform .22s ease,filter .22s ease';
+      node.style.opacity = '0';
+      node.style.transform = 'translate3d(0,8px,0) scale(.94)';
+      node.style.filter = 'blur(3px)';
+    }
+  }, 500);
+  scheduleHeroTransitionTimeout(() => {
     // Change only the inner UI; keep the card, thumbnail wrapper and image attached.
     main.id = 'heroPeek';
     main.className = 'float-card hero-card-live hero-role-settle';
@@ -448,18 +465,23 @@ function retreatHero(main, small, origin, target, previousVideo, currentVideo) {
     image.id = 'peekThumbnail';
     imageWrap.className = 'float-image';
     $('.feature-play', imageWrap)?.remove();
-    imageWrap.appendChild(create('span', 'float-orb'));
+    const orb = create('span', 'float-orb hero-preview-enter');
+    imageWrap.appendChild(orb);
     const info = $('.feature-info', main);
-    info.className = 'float-info';
-    const title = create('span', 'peek-video-title', currentVideo.title);
+    info.removeAttribute('style');
+    info.className = 'float-info hero-preview-enter';
+    const title = create('span', 'peek-video-title hero-preview-enter', currentVideo.title);
     title.id = 'peekTitle';
-    const index = create('span', 'float-index', String((carouselIndex + 1) % heroVideos.length + 1).padStart(2, '0'));
+    const index = create('span', 'float-index hero-preview-enter', String((carouselIndex + 1) % heroVideos.length + 1).padStart(2, '0'));
     index.id = 'peekIndex';
     info.replaceChildren(title, index);
     main.removeAttribute('style');
     // Commit the new layout with transitions disabled before restoring hover effects.
     void main.offsetWidth;
-    transitionFrame = requestAnimationFrame(() => { main.classList.remove('hero-role-settle'); });
+    transitionFrame = requestAnimationFrame(() => {
+      main.classList.remove('hero-role-settle');
+      $$('.hero-preview-enter', main).forEach(node => node.classList.add('is-entered'));
+    });
     small.removeAttribute('style');
     heroTransitionBusy = false;
   }, 900);
@@ -479,7 +501,7 @@ const slideClock = createSlideClock({
   advance: () => advanceHero(1),
 });
 function syncCarousel() {
-  const paused = userPaused || reduced || drawerOpen || activeInlineFrame || document.hidden || !heroInView || heroFocused;
+  const paused = userPaused || reduced || drawerOpen || modalOpen || document.hidden || !heroInView || heroFocused;
   const pauseButton = $('#heroPause');
   const label = reduced ? text('자동 전환 꺼짐', 'Slideshow off') : userPaused ? text('자동 전환 시작', 'Start slideshow') : text('자동 전환 정지', 'Pause slideshow');
   pauseButton.setAttribute('aria-label', label);
@@ -503,14 +525,11 @@ window.addEventListener('ldmchange', () => { if (heroTransitionBusy && (ldmEnabl
 [$('#heroVideo'), $('#heroPeek')].forEach(card => {
   const play = () => {
     const video = videos.find(video => video.id === card.dataset.videoId); if (!video) return;
-    filter = 'videos'; search.value = ''; renderVideos();
-    const frame = $$('[data-id]', grid).find(node => node.dataset.id === video.id)?.querySelector('.video-frame');
-    if (frame) { frame.scrollIntoView({ behavior: reduced || ldmEnabled ? 'auto' : 'smooth', block: 'center' }); openPlayer(frame, video); }
+    openPlayer(card, video);
   };
   card.addEventListener('click', event => { if (!event.target.closest('a')) play(); });
   card.addEventListener('keydown', event => { if (event.target === card && ['Enter', ' '].includes(event.key)) { event.preventDefault(); play(); } });
 });
-document.addEventListener('keydown', event => { if (event.key === 'Escape' && activeInlineFrame) { event.preventDefault(); closePlayer(); } });
 
 let fetchController, refreshTimer = 0, refreshChecks = 0;
 async function loadMore(initial = false) {
@@ -546,7 +565,7 @@ window.addEventListener('pagehide', () => { fetchController?.abort(); clearTimeo
 const suggestion = $('#ldmSuggestion');
 let fpsFrame = 0, fpsDismissed = false;
 const fpsSampler = createFpsSampler(fps => {
-  if (fpsDismissed || ldmEnabled || reduced || drawerOpen || activeInlineFrame) return;
+  if (fpsDismissed || ldmEnabled || reduced || drawerOpen || modalOpen) return;
   $('#ldmSuggestionDetail').textContent = text('현재 약 ' + fps + ' FPS입니다. LDM을 켤까요?', 'Running at about ' + fps + ' FPS. Enable LDM?');
   suggestion.hidden = false;
 });

@@ -126,7 +126,11 @@ test('built pages contain complete initial titles, distinct language metadata an
     assert.ok(document.querySelectorAll('#videoGrid .video-card').length >= 17);
     const node = document.querySelector('#videoBootstrap'); const data = JSON.parse(node.content.textContent || node.textContent); assert.ok(data.videos.every(video => video.title));
     for (const node of document.querySelectorAll('script[src],link[rel=stylesheet]')) { const url = node.getAttribute('src') || node.getAttribute('href'); assert.match(url, /\.[a-f0-9]{12}\./); await fs.access('dist' + url); }
-    assert.equal(document.querySelector('#videoModal'), null);
+    assert.ok(document.querySelector('#videoModal').hasAttribute('hidden'));
+    assert.equal(document.querySelector('#videoDialog').getAttribute('role'), 'dialog');
+    assert.equal(document.querySelector('#videoDialog').getAttribute('aria-modal'), 'true');
+    assert.equal(document.querySelector('#videoModalFrame').getAttribute('src'), 'about:blank');
+    assert.equal(document.querySelector('#videoModalClose').getAttribute('aria-label'), language === 'en' ? 'Close video player' : '영상 창 닫기');
     assert.equal(document.querySelector('#archiveStatus').textContent, '');
     assert.ok(document.querySelector('#ldmSuggestion').hasAttribute('hidden'));
     assert.equal(document.querySelector('#ldmSuggestionEnable').textContent, language === 'en' ? 'Enable now' : '지금 켜기');
