@@ -1,6 +1,6 @@
 import { renderDetail } from './mll-view.js';
 import { initMllShell } from './mll-shell.js';
-import { fetchDemonlist, showCheckedAt } from './mll-data.js';
+import { fetchDemonlist } from './mll-data.js';
 
 const $ = selector => document.querySelector(selector);
 const language = document.documentElement.lang === 'en' ? 'en' : 'ko', en = language === 'en';
@@ -22,7 +22,6 @@ async function refresh() {
       key = nextKey;
       document.title = `#${rank} ${demon.name} · MLL`;
     }
-    showCheckedAt($('#lastChecked'), data, language);
     $('#levelStatus').textContent = data.status === 'stale' ? (en ? 'Updates are delayed. Showing the last verified ranking.' : '최근 갱신이 지연되어 마지막으로 확인한 순위를 표시합니다.') : '';
     $('#retryLevel').hidden = true;
     shell.progress();

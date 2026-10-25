@@ -11,7 +11,8 @@ export function showCheckedAt(node, data, language = 'ko') {
   if (!Number.isFinite(date.getTime())) { node.hidden = true; return; }
   const en = language === 'en';
   node.dateTime = date.toISOString();
-  node.textContent = (en ? 'Checked ' : '최근 확인 ') + new Intl.DateTimeFormat(en ? 'en-GB' : 'ko-KR', {hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}).format(date);
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23',timeZoneName:'short',timeZone:'Asia/Seoul'}).formatToParts(date).map(part => [part.type,part.value]));
+  node.textContent = (en ? 'Checked ' : '최근 확인 ') + `${parts.year}.${parts.month}.${parts.day}. ${parts.hour}:${parts.minute}:${parts.second} ${parts.timeZoneName}`;
   node.title = new Intl.DateTimeFormat(en ? 'en-GB' : 'ko-KR', {dateStyle:'medium',timeStyle:'long',timeZone:'Asia/Seoul'}).format(date) + (en ? ' · Syncs every 5 minutes' : ' · 5분마다 동기화');
   node.hidden = false;
 }

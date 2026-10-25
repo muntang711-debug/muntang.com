@@ -16,7 +16,9 @@ test('every page uses the same categorized navigation for its language',async()=
       assert.equal(document.querySelectorAll('.drawer-link small').length,0);
       assert.equal(document.querySelectorAll('.drawer-category').length,2);
       assert.equal(document.querySelectorAll('.drawer-sub-link').length,4);
-      assert.equal(document.querySelector('.drawer-category-link[href="'+(prefix||'/')+(prefix?'/':'')+'"]').textContent.replace('↗','').trim(),language==='en'?'Muntang.com':'문탕닷컴');
+      assert.equal(document.querySelector('.drawer-category-link[href="'+(prefix||'/')+(prefix?'/':'')+'"]').textContent.replace('↗','').trim(),language==='en'?'Muntang.com':'문탕닷컴.');
+      assert.equal(document.querySelectorAll('.drawer-category-link>.brand-dot').length,0);
+      assert.equal(document.querySelector('.drawer-category[aria-label="MLL"] .drawer-category-link>span').textContent,'MLL.');
     }
     const paths=[...home.querySelectorAll('.site-menu-groups a')].map(node=>node.getAttribute('href'));
     assert.ok(paths.includes((prefix||'')+'/#showreel'));
@@ -31,7 +33,8 @@ test('English wordmarks highlight the existing domain dot without appending anot
     const node=document.querySelector(selector);
     assert.ok(node,selector);
     assert.equal(node.textContent,'Muntang.com',selector);
-    assert.equal(node.querySelectorAll('.brand-dot').length,1,selector);
-    assert.equal(node.querySelector('.brand-dot').textContent,'.');
+    assert.equal(node.querySelectorAll('.domain-dot').length,1,selector);
+    assert.equal(node.querySelector('.domain-dot').textContent,'.');
+    assert.equal(node.querySelector('.brand-dot'),null);
   }
 });

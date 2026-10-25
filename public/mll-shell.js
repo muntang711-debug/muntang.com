@@ -14,7 +14,7 @@ export function initMllShell(language = 'ko') {
     drawer.setAttribute('aria-hidden', String(!open));
     trigger.setAttribute('aria-expanded', String(open));
     trigger.setAttribute('aria-label', open ? text('메뉴 닫기', 'Close menu') : text('메뉴 열기', 'Open menu'));
-    if (open) drawer.prepend(trigger); else document.body.appendChild(trigger);
+    if (open) drawer.querySelector('.drawer-head').appendChild(trigger); else document.body.appendChild(trigger);
     for (const node of background) node.inert = open;
     document.body.classList.toggle('drawer-open', open);
     document.documentElement.classList.toggle('drawer-open', open);

@@ -5,6 +5,7 @@ import { parseHTML } from 'linkedom';
 import worker, { canonicalLocation, parseMllRoute } from '../worker.js';
 import { collectDemonlist, normalizeDemons, syncDemonlist, getDemonlist, DEMONLIST_KEY, DEMONLIST_CRON } from '../lib/demonlist.js';
 import { filterDemons, renderRows, renderDetail, highlight, youtubeId } from '../public/mll-view.js';
+import { showCheckedAt } from '../public/mll-data.js';
 // Synthetic test records only. Production has no bundled demonlist.
 const saved = { checkedAt: '2026-10-25T00:00:00Z', updatedAt: '2026-10-25T00:00:00Z', demons: Array.from({length:150}, (_, i) => ({ id:9000+i, position:i+1, name:`Test Level ${i+1}`, publisher:{name:`Publisher ${i+1}`}, verifier:{name:`Verifier ${i+1}`}, level_id:100000+i, requirement:50, video:'https://www.youtube.com/watch?v=abcdefghijk', thumbnail:null })) };
 
@@ -153,10 +154,17 @@ test('search highlights every matching field and external links use rank, never 
   assert.match(renderRows([demon],null), /class="level-select" href="\/mll\/1"/);
   assert.match(renderRows([demon],null,'','en'), /href="\/en\/mll\/1"/);
   assert.doesNotMatch(renderRows([demon],null), /<button/);
+  const {document:rowDocument}=parseHTML('<ol>'+renderRows([demon],null)+'</ol>');
+  assert.equal(rowDocument.querySelector('.level-select').firstElementChild.className,'level-thumbnail');
+  assert.equal(rowDocument.querySelector('.level-thumbnail img').getAttribute('src'),'https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg');
+  assert.equal(rowDocument.querySelector('.level-thumbnail img').getAttribute('loading'),'lazy');
   assert.equal(highlight('<Level & Level>', 'level'), '&lt;<mark>Level</mark> &amp; <mark>Level</mark>&gt;');
   assert.match(renderRows([demon], demon.id, 'publisher'), /<mark>Publisher<\/mark>/);
   assert.match(renderRows([demon], demon.id, '100000'), /ID <mark>100000<\/mark>/);
   const detail = renderDetail(demon);
+  const {document:detailDocument}=parseHTML('<article>'+detail+'</article>');
+  assert.equal(detailDocument.querySelector('.detail-info').lastElementChild.className,'detail-source');
+  assert.equal(detailDocument.querySelector('.detail-title .detail-source'),null);
   assert.match(detail, /href="https:\/\/pointercrate.com\/demonlist\/1\/"/);
   assert.doesNotMatch(detail, /demonlist\/9000/);
   assert.match(detail, /youtube-nocookie.com\/embed\/abcdefghijk/);
@@ -166,6 +174,17 @@ test('search highlights every matching field and external links use rank, never 
   assert.equal(youtubeId('https://youtu.be/abcdefghijk'), 'abcdefghijk');
   const input = clone(saved.demons); input[0].video = 'javascript:alert(1)'; input[0].thumbnail = 'https://evil.example/tracking.jpg';
   const normalized = normalizeDemons(input); assert.equal(normalized[0].video, null); assert.equal(normalized[0].thumbnail, null);
+});
+
+test('list check time exposes full date, seconds and timezone in both languages',()=>{
+  for(const language of ['ko','en']) {
+    const node={};
+    showCheckedAt(node,{checkedAt:'2026-10-25T10:12:34Z'},language);
+    assert.equal(node.dateTime,'2026-10-25T10:12:34.000Z');
+    assert.equal(node.hidden,false);
+    assert.match(node.textContent,/2026/);assert.match(node.textContent,/34/);assert.match(node.textContent,/GMT\+9/);
+    assert.match(node.textContent,language==='en'?/Checked/:/최근 확인/);
+  }
 });
 
 test('MLL reuses the home header/drawer, has separate bilingual routes and embeds no ranking data', async () => {
@@ -180,7 +199,7 @@ test('MLL reuses the home header/drawer, has separate bilingual routes and embed
     assert.equal(document.querySelector('#levelDetail'),null);
     assert.ok(document.querySelector('#lastChecked'));
     assert.equal(document.querySelectorAll('.drawer-link small').length,0);
-    assert.ok(document.querySelector('.mll-brand-group .return-home'));
+    assert.equal(document.querySelector('.return-home'),null);
     assert.equal(document.querySelector('.brand').getAttribute('href'), language === 'en' ? '/en/mll' : '/mll');
     assert.equal(document.querySelector('#languageToggle').getAttribute('href'), language === 'en' ? '/mll' : '/en/mll');
     assert.equal(document.querySelector('link[rel=canonical]').getAttribute('href'), 'https://muntang.com' + (language === 'en' ? '/en/mll' : '/mll'));
@@ -194,7 +213,7 @@ test('MLL reuses the home header/drawer, has separate bilingual routes and embed
   }
   for (const file of ['dist/index.html', 'dist/en/index.html']) {
     const { document: home } = parseHTML(await fs.readFile(file, 'utf8'));
-    assert.equal(home.querySelector('.drawer-category-link[href="' + (file.includes('/en/') ? '/en/mll' : '/mll') + '"] span').textContent, 'MLL');
+    assert.equal(home.querySelector('.drawer-category-link[href="' + (file.includes('/en/') ? '/en/mll' : '/mll') + '"] span').textContent, 'MLL.');
     assert.equal(home.querySelector('.drawer-links a[href$="/mll"]'),null);
   }
 });
@@ -208,7 +227,8 @@ test('standalone rank pages have their own URL, language switch and no ranking s
     assert.equal(document.querySelector('#languageToggle').getAttribute('href'),(language==='en'?'/mll/':'/en/mll/')+rank);
     assert.ok(document.querySelector('article#levelDetail'));
     assert.equal(document.querySelector('#demonRows'),null);
-    assert.ok(document.querySelector('#lastChecked'));
+    assert.equal(document.querySelector('#lastChecked'),null);
+    assert.equal(document.querySelector('main').firstElementChild.className,'level-pagination');
     assert.equal(document.querySelector('#previousLevel').hasAttribute('hidden'),rank===1);
     assert.equal(document.querySelector('#nextLevel').hasAttribute('hidden'),rank===150);
     const src=document.querySelector('script[defer]').getAttribute('src'); assert.match(src,/mll-level\./);
