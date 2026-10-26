@@ -25,6 +25,7 @@ test('server fills metadata outside the RSS window using actual player data', as
   const original = globalThis.fetch; t.after(()=>{globalThis.fetch=original;});
   let watchCalls=0;
   globalThis.fetch = async url => {
+    if(url.includes('playlist_id=UUSH')) return new Response('', {status:503});
     if(url.includes('/feeds/')) return new Response('<feed><entry><yt:videoId>abcdefghijk</yt:videoId><title>Video</title><published>2026-10-18</published><media:statistics views="42"/></entry></feed>');
     if(url.includes('/watch?')) { watchCalls++; return new Response('var ytInitialPlayerResponse = '+JSON.stringify({videoDetails:{videoId:'12345678901',viewCount:'2500'},microformat:{playerMicroformatRenderer:{publishDate:'2024-09-01'}}})+';'); }
     const data=url.includes('/shorts?')?{reelItemRenderer:{videoId:'12345678901',headline:{simpleText:'Short'},viewCountText:{simpleText:'2.5K views'}}}:{videoRenderer:{videoId:'abcdefghijk',title:{simpleText:'Video'},thumbnail:{thumbnails:[]},publishedTimeText:{simpleText:'8 days ago'}}};
@@ -36,4 +37,23 @@ test('server fills metadata outside the RSS window using actual player data', as
   assert.equal(data.videos[1].published,'2024-09-01');
   assert.equal(data.videos[1].viewCount,2500);
   assert.equal(data.videos[1].publishedText,'');
+});
+
+test('separate upload feeds cover older Shorts and videos without watch-page requests', async t => {
+  const original=globalThis.fetch; t.after(()=>{globalThis.fetch=original;});
+  const feedTypes=[];
+  globalThis.fetch=async url=>{
+    if(url.includes('/watch?')) assert.fail('complete upload feeds need no watch fetch');
+    if(url.includes('/feeds/')) {
+      const short=url.includes('playlist_id=UUSH');feedTypes.push(short?'shorts':'videos');
+      return new Response(`<feed><entry><yt:videoId>${short?'12345678901':'abcdefghijk'}</yt:videoId><title>Live upload</title><published>2024-09-01</published><media:statistics views="2500"/></entry></feed>`);
+    }
+    const item=url.includes('/shorts?')?{reelItemRenderer:{videoId:'12345678901',headline:{simpleText:'Short'}}}:{lockupViewModel:{contentId:'abcdefghijk',contentType:'LOCKUP_CONTENT_TYPE_VIDEO',metadata:{lockupMetadataViewModel:{title:{content:'Video'},metadata:{contentMetadataViewModel:{metadataRows:[{metadataParts:[{text:{content:'2.5K'},accessibilityLabel:'2.5K views'},{text:{content:'2 years ago'}}]}]}}}}}};
+    return new Response('var ytInitialData = '+JSON.stringify(item)+';');
+  };
+  const data=await collectCatalog('en');
+  assert.deepEqual(feedTypes.sort(),['shorts','videos']);
+  assert.equal(data.videos.length,2);
+  assert.ok(data.videos.every(video=>video.published==='2024-09-01'&&video.viewCount===2500));
+  assert.equal(data.videos.find(video=>video.id==='abcdefghijk').viewCountText,'2.5K views');
 });
