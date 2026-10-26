@@ -126,16 +126,18 @@ test('cron synchronizes both MLL and bilingual YouTube without visitor requests'
       return Response.json(saved.demons.slice(after, after === 0 ? 100 : 150));
     }
     if (raw.includes('/feeds/')) return new Response('',{status:404});
+    if (raw.includes('/watch?')) return new Response('var ytInitialPlayerResponse = '+JSON.stringify({videoDetails:{videoId:new URL(raw).searchParams.get('v'),viewCount:'42'},microformat:{playerMicroformatRenderer:{publishDate:'2024-09-01'}}})+';');
     const item = raw.includes('/shorts?') ? {reelItemRenderer:{videoId:'12345678901',headline:{simpleText:'Live short'}}} : {videoRenderer:{videoId:'abcdefghijk',title:{simpleText:'Live video'},thumbnail:{thumbnails:[{url:'https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg'}]}}};
     return new Response('var ytInitialData = '+JSON.stringify({richGridRenderer:{contents:[item]}})+';');
   };
   const entries=new Map(); const kv={get:async key=>entries.get(key)||null,put:async(key,json)=>entries.set(key,JSON.parse(json))};
   await worker.scheduled({ cron: DEMONLIST_CRON }, { MLL_DATA: kv });
-  assert.equal(calls,8); assert.equal(entries.size,3); assert.equal(entries.get(DEMONLIST_KEY).demons.length,150);
+  assert.equal(calls,12); assert.equal(entries.size,3); assert.equal(entries.get(DEMONLIST_KEY).demons.length,150);
   assert.equal(entries.get('youtube:catalog:v1:ko').data.language,'ko');
   assert.equal(entries.get('youtube:catalog:v1:ko').data.videos.length,2);
   assert.equal(entries.get('youtube:catalog:v1:en').data.language,'en');
-  await worker.scheduled({cron:'0 * * * *'},{MLL_DATA:kv}); assert.equal(calls,8);
+  assert.equal(entries.get('youtube:catalog:v1:ko').data.videos[0].viewCount,42);
+  await worker.scheduled({cron:'0 * * * *'},{MLL_DATA:kv}); assert.equal(calls,12);
 });
 
 test('MLL canonical path resolves without a slash redirect loop', async () => {

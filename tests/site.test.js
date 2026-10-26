@@ -116,7 +116,7 @@ test('optional RSS outage retains known dates while healthy video tabs remain fr
 });
 test('localized metadata replaces old text and all filters can load additional pages', () => {
   const videos = mergeVideos([{ id: 'abcdefghijk', title: '한국어', publishedText: '5일 전' }], [{ id: 'abcdefghijk', title: 'English', publishedText: '5d ago', published: '2026-10-18T00:00:00Z' }]);
-  assert.equal(videos[0].publishedText, '5d ago'); assert.match(formatDate(videos[0], 'en'), /Oct/);
+  assert.equal(videos[0].publishedText, '5d ago'); assert.match(formatDate(videos[0], 'en', Date.parse('2026-10-26T00:00:00Z')), /^1 week ago ·/);
   assert.deepEqual(pageTypes('shorts', { videos: 'v', shorts: 's' }), ['shorts']);
   assert.equal(filterVideos(videos, 'videos', 'ENGLISH').length, 1);
   assert.equal(mergeVideos([], [{ id: 'bad', title: 'invalid' }]).length, 0);

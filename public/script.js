@@ -67,7 +67,7 @@ $('#ldmToggle').addEventListener('click', () => setLdm(!ldmEnabled));
 let storyPending = false;
 function fitStory() {
   const section = $('#showreel'), sticky = $('#storySticky'), track = $('#storyTrack');
-  const vertical = innerWidth <= 760 || reduced || ldmEnabled;
+  const vertical = reduced || ldmEnabled;
   section.classList.toggle('story-vertical', vertical);
   if (vertical) {
     section.style.height = 'auto'; track.style.transform = 'none';
