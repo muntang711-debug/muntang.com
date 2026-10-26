@@ -1104,7 +1104,18 @@ html.video-modal-open,body.video-modal-open{overflow:hidden}
   .video-card-arrow:active,.video-dialog-close:active{background:var(--orange);color:#17110a}
 }
 @media (max-width:760px){
-  .scroll-story:not(.story-vertical) .scroll-story-sticky{height:100svh;min-height:0}
-  .scroll-story:not(.story-vertical) .story-panel--production{height:calc(100svh - 155px);min-height:0;max-height:640px}
+  /* Counter and cards occupy separate rows, including on short screens. */
+  .scroll-story:not(.story-vertical) .scroll-story-sticky{height:100svh;min-height:0;flex-direction:column;align-items:stretch;padding:86px 0 24px;gap:16px}
+  .scroll-story:not(.story-vertical) .story-topline{position:relative;top:auto;left:auto;right:auto;flex:none;min-height:24px;margin:0 6vw}
+  .scroll-story:not(.story-vertical) .story-track{flex:1;min-height:0;height:auto;padding:0 6vw;align-items:stretch}
+  .scroll-story:not(.story-vertical) .story-panel--production{height:auto;min-height:0;max-height:640px}
   .video-card-date{line-height:1.6;overflow-wrap:anywhere}
+}
+@media (max-width:760px) and (max-height:500px){
+  .scroll-story:not(.story-vertical) .scroll-story-sticky{padding-bottom:16px}
+  .scroll-story:not(.story-vertical) .story-panel--production{grid-template-columns:.9fr 1.1fr;grid-template-rows:1fr}
+  .scroll-story:not(.story-vertical) .production-copy{padding:14px}
+  .scroll-story:not(.story-vertical) .production-title{font-size:clamp(20px,4vw,28px)}
+  .scroll-story:not(.story-vertical) .production-description{font-size:10px;margin-top:8px}
+  .scroll-story:not(.story-vertical) .production-tags{margin-top:8px}
 }
