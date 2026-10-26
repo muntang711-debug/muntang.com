@@ -105,7 +105,7 @@ for (const language of ['ko', 'en']) {
   mll.querySelector('script[src="/mll.js"]').src = outputs.mll;
   mll.querySelector('script[src="/language.js"]').src = outputs.language;
   if (en) {
-    const strings = { listDescription:'Pointercrate Demonlist #1–150', originalListText:'Original list', resultCount:'Loading…', searchLabel:'Search level, publisher or ID', retrySync:'Try again', rankLabel:'Video', levelLabel:'Rank / Level / Publisher', emptyState:'Loading the demonlist…', mainSiteLink:'Muntang.com ↗', dataCredit:'Rankings: Pointercrate ↗' };
+    const strings = { listDescription:'Pointercrate Demonlist #1–150', originalListText:'Original list', resultCount:'Loading…', searchLabel:'Search level, publisher or ID', retrySync:'Try again', rankLabel:'Rank', thumbnailLabel:'Video', levelLabel:'Level / Publisher', emptyState:'Loading the demonlist…', mainSiteLink:'Muntang.com ↗', dataCredit:'Rankings: Pointercrate ↗' };
     for (const [id, value] of Object.entries(strings)) mll.getElementById(id).textContent = value;
     mll.querySelector('#levelSearch').placeholder = 'Search levels';
     mll.querySelector('.skip-link').textContent = 'Skip to demonlist';

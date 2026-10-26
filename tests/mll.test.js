@@ -165,7 +165,7 @@ test('search highlights every matching field and external links use rank, never 
   const {document:rowDocument}=parseHTML('<ol>'+renderRows([demon],null)+'</ol>');
   assert.equal(rowDocument.querySelector('.level-verifier'),null);
   assert.equal(filterDemons(saved.demons,demon.verifier.name).length,0);
-  assert.equal(rowDocument.querySelector('.level-select').firstElementChild.className,'level-thumbnail');
+  assert.deepEqual(Array.from(rowDocument.querySelector('.level-select').children,n=>n.className),['level-rank','level-thumbnail','level-copy']);
   assert.equal(rowDocument.querySelector('.level-thumbnail img').getAttribute('src'),'https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg');
   assert.equal(rowDocument.querySelector('.level-thumbnail img').getAttribute('loading'),'lazy');
   assert.equal(highlight('<Level & Level>', 'level'), '&lt;<mark>Level</mark> &amp; <mark>Level</mark>&gt;');
