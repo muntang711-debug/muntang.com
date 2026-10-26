@@ -6,23 +6,26 @@ export function initPageScroll() {
   document.body.appendChild(rail);
   document.documentElement.classList.add('page-scroll-overlay');
   let frame = 0, drag = null;
+  const header = document.querySelector('.header');
   function geometry() {
-    const height = innerHeight;
+    const top = Math.max(0, Math.min(innerHeight, header?.getBoundingClientRect().bottom || 0));
+    const height = innerHeight - top;
     const total = document.scrollingElement.scrollHeight;
-    const size = Math.min(height, Math.max(32, height * height / total));
-    return { range: Math.max(0, total - height), travel: height - size, size };
+    const size = Math.min(height, Math.max(32, height * innerHeight / total));
+    return { top, range: Math.max(0, total - innerHeight), travel: height - size, size };
   }
   function update() {
     frame = 0;
-    const { range, travel, size } = geometry();
+    const { top, range, travel, size } = geometry();
+    rail.style.top = top + 'px';
     rail.hidden = range <= 0;
     thumb.style.height = size + 'px';
     thumb.style.transform = `translateY(${range ? Math.min(1, Math.max(0, scrollY / range)) * travel : 0}px)`;
   }
   function schedule() { if (!frame) frame = requestAnimationFrame(update); }
   function move(clientY) {
-    const { range, travel } = geometry();
-    window.scrollTo({ top: travel ? Math.max(0, Math.min(1, (clientY - drag.offset) / travel)) * range : 0, behavior: 'instant' });
+    const { top, range, travel } = geometry();
+    window.scrollTo({ top: travel ? Math.max(0, Math.min(1, (clientY - top - drag.offset) / travel)) * range : 0, behavior: 'instant' });
   }
   rail.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
@@ -39,6 +42,8 @@ export function initPageScroll() {
   rail.addEventListener('pointerup', event => { if (rail.hasPointerCapture(event.pointerId)) rail.releasePointerCapture(event.pointerId); finish(); });
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', schedule, { passive: true });
-  new ResizeObserver(schedule).observe(document.body);
+  const observer = new ResizeObserver(schedule);
+  observer.observe(document.body);
+  if (header) observer.observe(header);
   update();
 }

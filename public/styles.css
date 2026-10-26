@@ -3,7 +3,7 @@
 /* Page scrolling stays native; the visible thumb overlays the content. */
 html.page-scroll-overlay{scrollbar-width:none;scrollbar-gutter:auto}
 html.page-scroll-overlay::-webkit-scrollbar{display:none;width:0;height:0}
-.page-scrollbar{position:fixed;z-index:980;top:0;right:0;bottom:0;width:10px;touch-action:none;user-select:none;cursor:pointer}
+.page-scrollbar{position:fixed;z-index:980;top:80px;right:0;bottom:0;width:10px;touch-action:none;user-select:none;cursor:pointer}
 .page-scrollbar[hidden],html.drawer-open .page-scrollbar,html.video-modal-open .page-scrollbar{display:none}
 .page-scrollbar-thumb{position:absolute;top:0;right:2px;width:4px;min-height:32px;border-radius:999px;background:linear-gradient(180deg,#ffb86c,#ff7900 72%,#c64b00);cursor:grab}.page-scrollbar.is-dragging .page-scrollbar-thumb{background:#ff9a35}
 @media (hover:hover) and (pointer:fine){

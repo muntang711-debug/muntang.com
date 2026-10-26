@@ -86,7 +86,8 @@ test('upstream failure preserves the complete last successful snapshot', async (
   const kv = storage(saved);
   await assert.rejects(syncDemonlist({ MLL_DATA: kv }, { collect: async () => { throw new Error('UpstreamHTTP429'); } }), /429/);
   assert.equal(kv.writes.length, 0); assert.deepEqual(await kv.get(DEMONLIST_KEY), saved);
-  assert.equal((await getDemonlist({ MLL_DATA: kv }, Date.parse(saved.checkedAt) + 400000)).status, 'stale');
+  assert.equal((await getDemonlist({ MLL_DATA: kv }, Date.parse(saved.checkedAt) + 600000)).status, 'fresh');
+  assert.equal((await getDemonlist({ MLL_DATA: kv }, Date.parse(saved.checkedAt) + 900000)).status, 'stale');
 });
 
 test('read API uses stored data without upstream requests; storage failure is explicit', async t => {

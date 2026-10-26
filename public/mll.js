@@ -1,4 +1,5 @@
 import { filterDemons, renderRows } from './mll-view.js';
+import { SYNC_INTERVAL } from '../lib/sync-config.js';
 import { initMllShell } from './mll-shell.js';
 import { fetchDemonlist, showCheckedAt } from './mll-data.js';
 
@@ -46,6 +47,6 @@ async function refresh() {
   }
 }
 $('#retrySync').addEventListener('click', refresh);
-setInterval(() => { if (!document.hidden) void refresh(); }, 300000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastRequestAt >= 300000) void refresh(); });
+setInterval(() => { if (!document.hidden) void refresh(); }, SYNC_INTERVAL);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastRequestAt >= SYNC_INTERVAL) void refresh(); });
 void refresh();

@@ -8,6 +8,14 @@ import { readUpstream, collectCatalog, fetchPage } from '../lib/youtube.js';
 import { parseEmbeddedJson, collectYouTubeVideos, findYouTubeContinuation } from '../lib/youtube-parser.js';
 import { mergeVideos, filterVideos, pageTypes, formatDate } from '../public/video-state.js';
 import { createSlideClock, createFpsSampler } from '../public/motion-clock.js';
+import { SYNC_INTERVAL, SYNC_CRON } from '../lib/sync-config.js';
+
+test('deployed cron and shared refresh interval stay at ten minutes', async () => {
+  const config = JSON.parse(await fs.readFile('wrangler.jsonc', 'utf8'));
+  assert.deepEqual(config.triggers.crons, [SYNC_CRON]);
+  assert.equal(SYNC_CRON, '*/10 * * * *');
+  assert.equal(SYNC_INTERVAL, 600000);
+});
 
 test('slide progress uses active time and survives pauses without duplicate clocks', () => {
   let time = 0, callback, progress = 0, advances = 0, requests = 0;
@@ -61,9 +69,11 @@ test('scheduled catalogs are stored separately and visitor reads never collect a
   assert.equal(storage.entries.size, 2);
   for (const language of ['ko','en']) {
     const data = await getCatalog({...params,language},null,{storage,now:now+60_000,collector:()=>assert.fail('stored catalogs must not collect on reads')});
-    assert.equal(data.language,language); assert.equal(data.status,'fresh'); assert.equal(data.syncIntervalSeconds,300);
+    assert.equal(data.language,language); assert.equal(data.status,'fresh'); assert.equal(data.syncIntervalSeconds,600);
   }
-  const old = await getCatalog(params,null,{storage,now:now+600_000,collector:()=>assert.fail('stale catalogs wait for the cron')});
+  const fresh = await getCatalog(params,null,{storage,now:now+600_000,collector:()=>assert.fail('stored catalogs wait for the cron')});
+  assert.equal(fresh.status,'fresh');
+  const old = await getCatalog(params,null,{storage,now:now+900_000,collector:()=>assert.fail('stale catalogs wait for the cron')});
   assert.equal(old.status,'stale'); assert.equal(old.videos[0].title,'실제 수집 제목');
 });
 test('failed sync preserves only previously collected KV data; missing data is unavailable', async () => {

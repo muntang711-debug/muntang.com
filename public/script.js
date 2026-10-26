@@ -1,4 +1,5 @@
 import { createSlideClock, createFpsSampler } from './motion-clock.js';
+import { SYNC_INTERVAL } from '../lib/sync-config.js';
 import { initPageScroll } from './page-scroll.js';
 import { initScene } from './scene.js';
 import { mergeVideos, filterVideos, pageTypes, formatDate } from './video-state.js';
@@ -584,5 +585,5 @@ document.addEventListener('visibilitychange', syncFpsMonitor);
 setLdm(ldmEnabled);
 initScene($, () => reduced, () => ldmEnabled);
 renderVideos(); refreshHero(); updateScroll(); loadMore(true);
-const catalogPoll = setInterval(() => { if (!document.hidden && !modalOpen) loadMore(true); }, 300_000);
+const catalogPoll = setInterval(() => { if (!document.hidden && !modalOpen) loadMore(true); }, SYNC_INTERVAL);
 window.addEventListener('pagehide', () => clearInterval(catalogPoll));
